@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hex Alphabet Encoder / Decoder</title>
+
+  <!-- Sprachumschalter -->
+  <nav>
+    <label for="langSelect">Sprache:</label>
+    <select id="langSelect" onchange="switchLang(this.value)">
+      <option value="en">English</option>
+      <option value="de">Deutsch</option>
+      <option value="pt(Brazil)">Portugu&ecirc;s(Brazil)</option>
+    </select>
+  </nav>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0b0f19;
+      color: #e4e9f1;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 { color: #7dd3fc; }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #111827;
+      color: #e4e9f1;
+      font-family: monospace;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #38bdf8;
+      color: #001f2e;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .copyBtn {
+      margin-left: 10px;
+      background: #10b981;
+      color: #001f2e;
+    }
+
+    .outputWrapper,
+    .encodedWrapper {
+      display: flex;
+      align-items: center;
+      margin-top: 14px;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+
+    #output,
+    #encodedOutput {
+      flex: 1;
+      font-size: 1.1em;
+    }
+
+    select {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #111827;
+      color: #e4e9f1;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    li {
+      padding: 4px 0;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    #decodedListContainer,
+    #encodedListContainer {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .showListBtn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #94a3b8;
+      color: #0b0f19;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Hex Alphabet Encoder / Decoder</h1>
+  <p>
+    Dieses Werkzeug unterstützt <strong>A=000</strong> bis <strong>Z=019</strong> und <strong>Leerstelle=???</strong>. Kopieren &amp; Einfügen funktioniert 1:1.
+  </p>
+
+  <!-- Dekodierer -->
+  <section id="decoder">
+    <h2>Dekodierer</h2>
+    <textarea id="input" placeholder="Gib den codierten Text ein..."></textarea><br>
+
+    <button id="decodeBtn">Dekodieren</button>
+    <button class="showListBtn" data-target="decodedListContainer">Liste Anzeigen/Verstecken</button>
+
+    <div class="outputWrapper">
+      <div id="output">-- noch keine Ausgabe --</div>
+      <button class="copyBtn" data-target="output">Kopieren</button>
+    </div>
+
+    <div id="decodedListContainer">
+      <ul id="decodedList"></ul>
+    </div>
+  </section>
+
+  <!-- Kodierer -->
+  <section id="encoder">
+    <h2>Kodierer / Code-Generator</h2>
+    <textarea id="textToEncode" placeholder="Gib den Text zum Kodieren ein..."></textarea><br>
+
+    <label for="formatSelect">Format auswählen:</label>
+    <select id="formatSelect">
+      <option value="space">Mit Leerzeichen getrennt</option>
+      <option value="newline">Eine Zeile pro Code</option>
+      <option value="concat">Kontinuierlich</option>
+    </select><br>
+
+    <button id="encodeBtn">Kodieren</button>
+    <button class="showListBtn" data-target="encodedListContainer">Liste Anzeigen/Verstecken</button>
+
+    <div class="encodedWrapper">
+      <div id="encodedOutput">-- noch keine Ausgabe --</div>
+      <button class="copyBtn" data-target="encodedOutput">Kopieren</button>
+    </div>
+
+    <div id="encodedListContainer">
+      <ul id="encodedList"></ul>
+    </div>
+  </section>
+
+  <!-- JavaScript -->
+  <script>
+    const letterList = [
+      {char:'A', code:'000'},{char:'B', code:'001'},{char:'C', code:'002'},
+      {char:'D', code:'003'},{char:'E', code:'004'},{char:'F', code:'005'},
+      {char:'G', code:'006'},{char:'H', code:'007'},{char:'I', code:'008'},
+      {char:'J', code:'009'},{char:'K', code:'00A'},{char:'L', code:'00B'},
+      {char:'M', code:'00C'},{char:'N', code:'00D'},{char:'O', code:'00E'},
+      {char:'P', code:'00F'},{char:'Q', code:'010'},{char:'R', code:'011'},
+      {char:'S', code:'012'},{char:'T', code:'013'},{char:'U', code:'014'},
+      {char:'V', code:'015'},{char:'W', code:'016'},{char:'X', code:'017'},
+      {char:'Y', code:'018'},{char:'Z', code:'019'},{char:' ', code:'???'}
+    ];
+
+    const mapping = {};
+    const reverseMapping = {};
+    letterList.forEach(item => { mapping[item.code] = item.char; reverseMapping[item.char] = item.code; });
+
+    function decodeText(raw) {
+      if (!raw.trim()) return [];
+      const codes = raw.split(/\s+/).map(c => c.trim()).filter(c => c.length > 0);
+      const lastIndex = codes.length - 1;
+      return codes.map((code, i) => {
+        const upper = code.toUpperCase();
+        if (upper === '???') return {code:'???', char:' '};
+        const char = mapping[upper] || '?';
+        if (char && i === lastIndex && char === ' ') return {code:upper, char:''};
+        return {code:upper, char};
+      });
+    }
+
+    function showDecodedList(list) {
+      const ul = document.getElementById('decodedList');
+      ul.innerHTML = '';
+      list.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.char}  ${item.code}`;
+        ul.appendChild(li);
+      });
+    }
+
+    document.getElementById('decodeBtn').addEventListener('click', () => {
+      const input = document.getElementById('input').value;
+      const list = decodeText(input);
+      document.getElementById('output').textContent = list.map(r => r.char).join('') || '-- noch keine Ausgabe --';
+      showDecodedList(list);
+    });
+
+    function encodeText(text) {
+      return Array.from(text.toUpperCase()).map(char => ({char, code: reverseMapping[char] || '???'}));
+    }
+
+    function showEncodedList(list) {
+      const ul = document.getElementById('encodedList');
+      ul.innerHTML = '';
+      list.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.char}  ${item.code}`;
+        ul.appendChild(li);
+      });
+    }
+
+    document.getElementById('encodeBtn').addEventListener('click', () => {
+      const text = document.getElementById('textToEncode').value;
+      const format = document.getElementById('formatSelect').value;
+      const list = encodeText(text);
+      let encoded = '';
+      switch(format) {
+        case 'space': encoded = list.map(i => i.code).join(' '); break;
+        case 'newline': encoded = list.map(i => i.code).join('\n'); break;
+        case 'concat': encoded = list.map(i => i.code).join(''); break;
+      }
+      document.getElementById('encodedOutput').textContent = encoded || '-- noch keine Ausgabe --';
+      showEncodedList(list);
+    });
+
+    document.querySelectorAll('.showListBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = document.getElementById(btn.getAttribute('data-target'));
+        target.style.display = (target.style.display === 'none' || target.style.display === '') ? 'block' : 'none';
+      });
+    });
+
+    document.querySelectorAll('.copyBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(document.getElementById(btn.getAttribute('data-target')).textContent);
+      });
+    });
+
+    function switchLang(lang) {
+  const page = window.location.pathname.split("/").pop();
+  // Prüfe, ob die Datei _en, _de, _pt(Brazil) enthält
+  let baseName = page.replace(/_(en|de|pt\(Brazil\))\.html$/, "");
+  if(baseName === page) {
+    // Wenn kein Unterstrich gefunden wurde, z.B. direkt index.html oder pt-Datei als erstes
+    baseName = page.replace(".html", "");
+  }
+  window.location.href = baseName + "_" + lang + ".html";
+}
+
+
+    window.onload = function() {
+      const page = window.location.pathname.split("/").pop();
+      const match = page.match(/_([a-z]{2})\.html$/);
+      const currentLang = match ? match[1] : "de";
+      const select = document.getElementById("langSelect");
+      select.value = currentLang;
+      for (let option of select.options)
+        option.disabled = (option.value === currentLang);
+    }
+  </script>
+</body>
+</html>

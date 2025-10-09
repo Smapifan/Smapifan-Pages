@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="pt(Brazil)">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Codificador / Decodificador Hex-Alfabeto</title>
+
+  <!-- Seletor de idioma -->
+  <nav>
+    <label for="langSelect">Idioma:</label>
+    <select id="langSelect" onchange="switchLang(this.value)">
+      <option value="en">English</option>
+      <option value="de">Deutsch</option>
+      <option value="pt(Brazil)">Portugu&ecirc;s(Brazil)</option>
+    </select>
+  </nav>
+
+  <!-- Estilos -->
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0b0f19;
+      color: #e4e9f1;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { color: #7dd3fc; }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #111827;
+      color: #e4e9f1;
+      font-family: monospace;
+      resize: vertical;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #38bdf8;
+      color: #001f2e;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .copyBtn {
+      margin-left: 10px;
+      background: #10b981;
+      color: #001f2e;
+    }
+    .outputWrapper, .encodedWrapper {
+      display: flex;
+      align-items: center;
+      margin-top: 14px;
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+    #output, #encodedOutput { flex: 1; font-size: 1.1em; }
+    select {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #111827;
+      color: #e4e9f1;
+    }
+    ul { list-style: none; padding: 0; margin-top: 10px; }
+    li { padding: 4px 0; border-bottom: 1px solid #1f2937; }
+    #decodedListContainer, #encodedListContainer { display: none; margin-top: 10px; }
+    .showListBtn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background: #94a3b8;
+      color: #0b0f19;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Codificador / Decodificador Hex-Alfabeto</h1>
+  <p>
+    Esta ferramenta suporta <strong>A=000</strong> até <strong>Z=019</strong> e <strong>Espaço=???</strong>.
+    Copiar e colar funciona 1:1.
+  </p>
+
+  <!-- Decodificador -->
+  <section id="decoder">
+    <h2>Decodificador</h2>
+    <textarea id="input" placeholder="Digite o texto codificado..."></textarea><br>
+    <button id="decodeBtn">Decodificar</button>
+    <button class="showListBtn" data-target="decodedListContainer">Mostrar/Ocultar Lista</button>
+
+    <div class="outputWrapper">
+      <div id="output">-- sem saída ainda --</div>
+      <button class="copyBtn" data-target="output">Copiar</button>
+    </div>
+
+    <div id="decodedListContainer">
+      <ul id="decodedList"></ul>
+    </div>
+  </section>
+
+  <!-- Codificador -->
+  <section id="encoder">
+    <h2>Codificador / Gerador de Códigos</h2>
+    <textarea id="textToEncode" placeholder="Digite o texto para codificar..."></textarea><br>
+
+    <label for="formatSelect">Escolha o formato:</label>
+    <select id="formatSelect">
+      <option value="space">Separado por espaços</option>
+      <option value="newline">Um por linha</option>
+      <option value="concat">Contínuo</option>
+    </select><br>
+
+    <button id="encodeBtn">Codificar</button>
+    <button class="showListBtn" data-target="encodedListContainer">Mostrar/Ocultar Lista</button>
+
+    <div class="encodedWrapper">
+      <div id="encodedOutput">-- sem saída ainda --</div>
+      <button class="copyBtn" data-target="encodedOutput">Copiar</button>
+    </div>
+
+    <div id="encodedListContainer">
+      <ul id="encodedList"></ul>
+    </div>
+  </section>
+
+  <!-- JavaScript -->
+  <script>
+    // --- Mapeamento ---
+    const letterList = [
+      {char:'A',code:'000'},{char:'B',code:'001'},{char:'C',code:'002'},
+      {char:'D',code:'003'},{char:'E',code:'004'},{char:'F',code:'005'},
+      {char:'G',code:'006'},{char:'H',code:'007'},{char:'I',code:'008'},
+      {char:'J',code:'009'},{char:'K',code:'00A'},{char:'L',code:'00B'},
+      {char:'M',code:'00C'},{char:'N',code:'00D'},{char:'O',code:'00E'},
+      {char:'P',code:'00F'},{char:'Q',code:'010'},{char:'R',code:'011'},
+      {char:'S',code:'012'},{char:'T',code:'013'},{char:'U',code:'014'},
+      {char:'V',code:'015'},{char:'W',code:'016'},{char:'X',code:'017'},
+      {char:'Y',code:'018'},{char:'Z',code:'019'},{char:' ',code:'???'}
+    ];
+    const mapping={}, reverseMapping={};
+    letterList.forEach(item => { mapping[item.code]=item.char; reverseMapping[item.char]=item.code; });
+
+    // --- Decodificação ---
+    function decodeText(raw){
+      if(!raw.trim()) return [];
+      const codes = raw.split(/\s+/).map(c=>c.trim()).filter(c=>c.length>0);
+      const lastIndex = codes.length - 1;
+      return codes.map((code,i)=>{
+        const upper = code.toUpperCase();
+        if(upper==='???') return {code:'???',char:' '};
+        const char = mapping[upper]||'?';
+        if(char && i===lastIndex && char===' ') return {code:upper,char:''};
+        return {code:upper,char};
+      });
+    }
+
+    function showDecodedList(list){
+      const ul = document.getElementById('decodedList'); ul.innerHTML='';
+      list.forEach(item=>{
+        const li = document.createElement('li');
+        li.textContent = `${item.char}  ${item.code}`;
+        ul.appendChild(li);
+      });
+    }
+
+    document.getElementById('decodeBtn').addEventListener('click',()=>{
+      const input = document.getElementById('input').value;
+      const list = decodeText(input);
+      document.getElementById('output').textContent = list.map(r=>r.char).join('') || '-- sem saída --';
+      showDecodedList(list);
+    });
+
+    // --- Codificação ---
+    function encodeText(text){
+      const list=[];
+      for(let i=0;i<text.length;i++){
+        const char=text[i].toUpperCase();
+        list.push({char,code:reverseMapping[char]||'???'});
+      }
+      return list;
+    }
+
+    function showEncodedList(list){
+      const ul = document.getElementById('encodedList'); ul.innerHTML='';
+      list.forEach(item=>{
+        const li = document.createElement('li');
+        li.textContent = `${item.char}  ${item.code}`;
+        ul.appendChild(li);
+      });
+    }
+
+    document.getElementById('encodeBtn').addEventListener('click',()=>{
+      const text = document.getElementById('textToEncode').value;
+      const format = document.getElementById('formatSelect').value;
+      const list = encodeText(text);
+      let encoded='';
+      switch(format){
+        case 'space': encoded=list.map(i=>i.code).join(' '); break;
+        case 'newline': encoded=list.map(i=>i.code).join('\n'); break;
+        case 'concat': encoded=list.map(i=>i.code).join(''); break;
+      }
+      document.getElementById('encodedOutput').textContent = encoded || '-- sem saída --';
+      showEncodedList(list);
+    });
+
+    // --- Mostrar / Ocultar Listas ---
+    document.querySelectorAll('.showListBtn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const target = document.getElementById(btn.getAttribute('data-target'));
+        target.style.display = (target.style.display==='none'||target.style.display==='') ? 'block' : 'none';
+      });
+    });
+
+    // --- Copiar ---
+    document.querySelectorAll('.copyBtn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const target = document.getElementById(btn.getAttribute('data-target')).textContent;
+        navigator.clipboard.writeText(target);
+      });
+    });
+
+    // --- Troca de idioma ---
+    function switchLang(lang) {
+  const page = window.location.pathname.split("/").pop();
+  // Prüfe, ob die Datei _en, _de, _pt(Brazil) enthält
+  let baseName = page.replace(/_(en|de|pt\(Brazil\))\.html$/, "");
+  if(baseName === page) {
+    // Wenn kein Unterstrich gefunden wurde, z.B. direkt index.html oder pt-Datei als erstes
+    baseName = page.replace(".html", "");
+  }
+  window.location.href = baseName + "_" + lang + ".html";
+}
+
+
+    // --- Detectar idioma atual ---
+    window.onload = function(){
+      const page = window.location.pathname.split("/").pop();
+      const langMap = {
+        "_en.html": "en",
+        "_de.html": "de",
+        "_pt(Brazil).html": "pt(Brazil)"
+      };
+      let currentLang = "pt(Brazil)";
+      for(const suffix in langMap){
+        if(page.endsWith(suffix)){
+          currentLang = langMap[suffix];
+          break;
+        }
+      }
+      const select = document.getElementById("langSelect");
+      select.value = currentLang;
+    }
+  </script>
+</body>
+</html>

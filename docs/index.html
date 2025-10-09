@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Tabelle als HTML</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #0b0f19;
+        color: #e4e9f1;
+        padding: 20px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    th, td {
+        border: 1px solid #94a3b8;
+        padding: 10px;
+        text-align: center;
+    }
+    th {
+        background-color: #1e293b;
+        color: #7dd3fc;
+    }
+    td {
+        background-color: #111827;
+    }
+    tr:hover td {
+        background-color: #1f2937;
+    }
+</style>
+</head>
+<body>
+
+<h2>Creators Tabelle</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Page</th>
+            <th>Creator/-s</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Hex alphabet</td>
+            <td>Smapifan</td>
+        </tr>
+        <tr>
+            <td>Werewolf Wiki</td>
+            <td>Smapifan, MaggPlays, Mettatonbugado, My Bot</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Table of contents</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Page</th>
+            <th>content</th>
+            <th>Link</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Hex alphabet</td>
+            <td>A word/sentence to my hexadecimal-alphabet converter </td>
+            <td><a href="https://github.com" target="_blank">Here</a></td>
+        </tr>
+        <tr>
+            <td>Werewolf Wiki</td>
+            <td>A word/sentence to my hexadecimal-alphabet converter </td>
+            <td><a href="https://github.com" target="_blank">Here</a></td>
+        </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
