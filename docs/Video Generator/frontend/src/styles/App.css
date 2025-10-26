@@ -1,0 +1,15 @@
+.App {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+h1, h2 {
+  color: red;
+}
+label {
+  display: block;
+  margin: 10px 0;
+}
+textarea {
+  width: 400px;
+  height: 100px;
+}
