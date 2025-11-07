@@ -1,5 +1,5 @@
 # 📁 Smapifan-Pages
-All GitHub Pages I create or have created in one place.
+Includes my mods (as Wikipedia) hosted with GitHub Pages. 
 
 ---
 
@@ -23,3 +23,4 @@ Experimental or unfinished GitHub Pages projects.
 
 ## 📁 Archived
 ### None
+Video generator, no longer available
