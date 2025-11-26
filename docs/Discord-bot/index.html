@@ -1,170 +1,140 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profi Discord Bot Builder</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Bot-Flow Builder</title>
+<!-- Rete.js Styles -->
+<link rel="stylesheet" href="https://unpkg.com/rete/dist/rete.min.css" />
 <style>
-body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
-h1 { color: #333; }
-button, input, textarea { margin: 5px 0; padding: 8px; width: 100%; }
-#commandsContainer { margin-top: 20px; }
-.command { background: #fff; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-textarea { width: 100%; height: 120px; }
-.burger-menu { position: absolute; top: 20px; right: 20px; }
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  #rete { width: 100%; height: 80vh; border: 1px solid #ccc; }
+  button { margin-top: 10px; margin-right: 10px; }
+  #output { white-space: pre-wrap; background:#f0f0f0; padding:10px; margin-top:10px; height:150px; overflow:auto; }
 </style>
 </head>
 <body>
 
-<h1>Profi Discord Bot Builder</h1>
-<div class="burger-menu">
-  <button id="menuBtn">☰ Menü</button>
-</div>
+<h1>Bot-Flow Builder</h1>
+<div id="rete"></div>
+<button id="add-node">Node hinzufügen</button>
+<button id="save">Flow speichern</button>
+<pre id="output"></pre>
 
-<div>
-  <label>Bot-Ordner auswählen:</label>
-  <input type="file" id="folderInput" webkitdirectory directory multiple>
-</div>
-
-<div>
-  <label>GitHub Repo (Link + Token):</label>
-  <input type="text" id="githubLink" placeholder="Repo Link z.B. https://github.com/user/repo">
-  <input type="text" id="githubToken" placeholder="Personal Access Token (falls privat)">
-  <button id="importGithubBtn">GitHub Repo importieren</button>
-</div>
-
-<div>
-  <button id="addCommandBtn">Neuen Befehl erstellen</button>
-  <button id="generateBtn">JS-Code generieren</button>
-  <button id="downloadBtn">Projekt als ZIP speichern</button>
-</div>
-
-<div id="commandsContainer"></div>
-<textarea id="output" placeholder="Hier erscheint der generierte JS-Code..."></textarea>
-
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<!-- Rete.js und Plugins -->
+<script src="https://unpkg.com/rete/dist/rete.min.js"></script>
+<script src="https://unpkg.com/rete-connection-plugin/dist/rete-connection-plugin.min.js"></script>
+<script src="https://unpkg.com/rete-area-plugin/dist/rete-area-plugin.min.js"></script>
 
 <script>
-let commands = [];
+(async () => {
+  const container = document.querySelector('#rete');
 
-// ===== Befehl erstellen =====
-function createCommand(name="Neuer Befehl", code="// JS-Code hier"){
-    const command = { id: Date.now(), name, code };
-    commands.push(command);
-    renderCommands();
-}
-
-// ===== Befehle rendern =====
-function renderCommands(){
-    const container = document.getElementById("commandsContainer");
-    container.innerHTML = "";
-    commands.forEach(c=>{
-        const div = document.createElement("div");
-        div.className = "command";
-        div.innerHTML = `
-            <label>Name:</label>
-            <input type="text" value="${c.name}" oninput="updateCommandName(${c.id}, this.value)">
-            <br>
-            <label>JS-Code:</label>
-            <textarea oninput="updateCommandCode(${c.id}, this.value)">${c.code}</textarea>
-            <br>
-            <button onclick="removeCommand(${c.id})">Befehl löschen</button>
-        `;
-        container.appendChild(div);
-    });
-}
-
-// ===== Befehl Update & Remove =====
-function updateCommandName(id, value){
-    const command = commands.find(c=>c.id===id);
-    if(command) command.name = value;
-}
-function updateCommandCode(id, value){
-    const command = commands.find(c=>c.id===id);
-    if(command) command.code = value;
-}
-function removeCommand(id){
-    commands = commands.filter(c=>c.id!==id);
-    renderCommands();
-}
-
-// ===== Ordnerintegration =====
-document.getElementById("folderInput").addEventListener("change", e=>{
-    const files = e.target.files;
-    for(let file of files){
-        if(file.name.endsWith(".js")){
-            const reader = new FileReader();
-            reader.onload = (evt)=>{
-                createCommand(file.name, evt.target.result);
-            };
-            reader.readAsText(file);
+  // Node-Komponenten
+  class TextNode extends Rete.Component {
+    constructor() { super("Text"); }
+    builder(node) {
+      const out = new Rete.Output('text', 'Text');
+      let ctrl = new Rete.Control('text', {
+        component: class extends Rete.Control {
+          constructor(emitter, key) {
+            super(key);
+            this.render = 'input';
+            this.key = key;
+            this.emitter = emitter;
+            this.data = { text: 'Begrüßung' };
+            this.putData(this.data);
+          }
+          mounted() { this.update(); }
+          setValue(val) {
+            this.data.text = val;
+            this.putData(this.data);
+            this.emitter.trigger('process');
+          }
+          update() {
+            this.putData(this.key, this.data.text);
+          }
+          render() {
+            return `<input type="text" style="width:100%;" value="${this.data.text}" oninput="this.parentNode.control.setValue(this.value)" />`;
+          }
         }
+      }, 'text');
+      node.addControl(ctrl);
+      return node.addOutput(out);
     }
-});
+    worker(node, inputs, outputs) {
+      outputs['text'] = node.data.text;
+    }
+  }
 
-// ===== GitHub Integration =====
-async function importGithubRepo(repoUrl, token){
-    try{
-        const parts = repoUrl.replace("https://github.com/", "").split("/");
-        const owner = parts[0];
-        const repo = parts[1];
-
-        async function fetchFiles(path=""){
-            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-            const res = await fetch(url, {
-                headers: token ? { Authorization: `token ${token}` } : {}
-            });
-            if(!res.ok) throw new Error("GitHub API Fehler");
-            const data = await res.json();
-            for(const file of data){
-                if(file.type === "file" && file.name.endsWith(".js")){
-                    const fileRes = await fetch(file.download_url);
-                    const content = await fileRes.text();
-                    createCommand(file.name, content);
-                } else if(file.type === "dir"){
-                    await fetchFiles(file.path);
-                }
-            }
+  class ActionNode extends Rete.Component {
+    constructor() { super("Aktion"); }
+    builder(node) {
+      const out = new Rete.Output('action', 'Aktion');
+      let ctrl = new Rete.Control('action', {
+        component: class extends Rete.Control {
+          constructor(emitter, key) {
+            super(key);
+            this.render = 'input';
+            this.key = key;
+            this.emitter = emitter;
+            this.data = { action: 'Antworten' };
+            this.putData(this.data);
+          }
+          mounted() { this.update(); }
+          setValue(val) {
+            this.data.action = val;
+            this.putData(this.data);
+            this.emitter.trigger('process');
+          }
+          update() {
+            this.putData(this.key, this.data.action);
+          }
+          render() {
+            return `<input type="text" style="width:100%;" value="${this.data.action}" oninput="this.parentNode.control.setValue(this.value)" />`;
+          }
         }
-
-        await fetchFiles();
-        renderCommands();
-        alert("GitHub Repo erfolgreich importiert!");
-    } catch(err){
-        alert("Fehler beim Import: " + err.message);
+      }, 'action');
+      node.addControl(ctrl);
+      return node.addOutput(out);
     }
-}
+    worker(node, inputs, outputs) {
+      outputs['action'] = node.data.action;
+    }
+  }
 
-document.getElementById("importGithubBtn").addEventListener("click", ()=>{
-    const url = document.getElementById("githubLink").value;
-    const token = document.getElementById("githubToken").value;
-    if(url) importGithubRepo(url, token);
-});
+  // Editor
+  const editor = new Rete.NodeEditor('demo@0.1.0', container);
+  editor.use(Rete.ConnectionPlugin);
+  editor.use(Rete.AreaPlugin, { background: false });
 
-// ===== JS-Code generieren =====
-document.getElementById("generateBtn").addEventListener("click", ()=>{
-    let code = "";
-    commands.forEach(c=>{
-        code += `// ===== ${c.name} =====\n${c.code}\n\n`;
-    });
-    document.getElementById("output").value = code;
-});
+  const textComp = new TextNode();
+  const actionComp = new ActionNode();
 
-// ===== Projekt als ZIP speichern =====
-document.getElementById("downloadBtn").addEventListener("click", ()=>{
-    const zip = new JSZip();
-    commands.forEach(c=>{
-        zip.file(c.name+".js", c.code);
-    });
-    zip.generateAsync({type:"blob"}).then(content=>{
-        saveAs(content, "projekt.zip");
-    });
-});
+  // Nodes erstellen
+  async function createNode(comp, data, x=0, y=0) {
+    const node = await comp.createNode(data);
+    node.x = x; node.y = y;
+    editor.addNode(node);
+    return node;
+  }
 
-// ===== Button Befehl erstellen =====
-document.getElementById("addCommandBtn").addEventListener("click", ()=>createCommand());
+  // Nodes hinzufügen (auf Button klicken)
+  document.getElementById('add-node').onclick = async () => {
+    await createNode(textComp, { text: 'Begrüßung' }, 80, 80);
+    await createNode(actionComp, { action: 'Antworten' }, 300, 200);
+  };
 
+  // Verbindung speichern
+  document.getElementById('save').onclick = () => {
+    const data = editor.toJSON();
+    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+  };
+
+  // Beispielnodes initial
+  await createNode(textComp, { text: 'Willkommen' }, 50, 50);
+  await createNode(actionComp, { action: 'Antworten' }, 250, 150);
+})();
 </script>
 
 </body>
