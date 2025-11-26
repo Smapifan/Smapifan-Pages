@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profi Bot Builder für Discord</title>
+<title>Profi Discord Bot Builder</title>
 <style>
 body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
 h1 { color: #333; }
 button, input, textarea { margin: 5px 0; padding: 8px; width: 100%; }
-#blocksContainer { margin-top: 20px; }
-.block { background: #fff; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+#commandsContainer { margin-top: 20px; }
+.command { background: #fff; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
 textarea { width: 100%; height: 120px; }
 </style>
 </head>
 <body>
 
-<h1>Profi Bot Builder für Discord</h1>
+<h1>Profi Discord Bot Builder</h1>
 
 <div>
-  <label>Projekt-Ordner auswählen:</label>
+  <label>Bot-Ordner auswählen:</label>
   <input type="file" id="folderInput" webkitdirectory directory multiple>
 </div>
 
@@ -30,59 +30,59 @@ textarea { width: 100%; height: 120px; }
 </div>
 
 <div>
-  <button id="addBlockBtn">Neuen Block erstellen</button>
+  <button id="addCommandBtn">Neuen Befehl erstellen</button>
   <button id="generateBtn">JS-Code generieren</button>
   <button id="downloadBtn">Projekt als ZIP speichern</button>
 </div>
 
-<div id="blocksContainer"></div>
+<div id="commandsContainer"></div>
 <textarea id="output" placeholder="Hier erscheint der generierte JS-Code..."></textarea>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 
 <script>
-let blocks = [];
+let commands = [];
 
-// ===== Block erstellen =====
-function createBlock(name="Neuer Block", code="// JS-Code hier"){
-    const block = { id: Date.now(), name, code };
-    blocks.push(block);
-    renderBlocks();
+// ===== Befehl erstellen =====
+function createCommand(name="Neuer Befehl", code="// JS-Code hier"){
+    const command = { id: Date.now(), name, code };
+    commands.push(command);
+    renderCommands();
 }
 
-// ===== Blöcke rendern =====
-function renderBlocks(){
-    const container = document.getElementById("blocksContainer");
+// ===== Befehle rendern =====
+function renderCommands(){
+    const container = document.getElementById("commandsContainer");
     container.innerHTML = "";
-    blocks.forEach(b=>{
+    commands.forEach(c=>{
         const div = document.createElement("div");
-        div.className = "block";
+        div.className = "command";
         div.innerHTML = `
             <label>Name:</label>
-            <input type="text" value="${b.name}" oninput="updateBlockName(${b.id}, this.value)">
+            <input type="text" value="${c.name}" oninput="updateCommandName(${c.id}, this.value)">
             <br>
             <label>JS-Code:</label>
-            <textarea oninput="updateBlockCode(${b.id}, this.value)">${b.code}</textarea>
+            <textarea oninput="updateCommandCode(${c.id}, this.value)">${c.code}</textarea>
             <br>
-            <button onclick="removeBlock(${b.id})">Block löschen</button>
+            <button onclick="removeCommand(${c.id})">Befehl löschen</button>
         `;
         container.appendChild(div);
     });
 }
 
-// ===== Block Update & Remove =====
-function updateBlockName(id, value){
-    const block = blocks.find(b=>b.id===id);
-    if(block) block.name = value;
+// ===== Befehl Update & Remove =====
+function updateCommandName(id, value){
+    const command = commands.find(c=>c.id===id);
+    if(command) command.name = value;
 }
-function updateBlockCode(id, value){
-    const block = blocks.find(b=>b.id===id);
-    if(block) block.code = value;
+function updateCommandCode(id, value){
+    const command = commands.find(c=>c.id===id);
+    if(command) command.code = value;
 }
-function removeBlock(id){
-    blocks = blocks.filter(b=>b.id!==id);
-    renderBlocks();
+function removeCommand(id){
+    commands = commands.filter(c=>c.id!==id);
+    renderCommands();
 }
 
 // ===== Ordnerintegration =====
@@ -92,7 +92,7 @@ document.getElementById("folderInput").addEventListener("change", e=>{
         if(file.name.endsWith(".js")){
             const reader = new FileReader();
             reader.onload = (evt)=>{
-                createBlock(file.name, evt.target.result);
+                createCommand(file.name, evt.target.result);
             };
             reader.readAsText(file);
         }
@@ -117,7 +117,7 @@ async function importGithubRepo(repoUrl, token){
                 if(file.type === "file" && file.name.endsWith(".js")){
                     const fileRes = await fetch(file.download_url);
                     const content = await fileRes.text();
-                    createBlock(file.name, content);
+                    createCommand(file.name, content);
                 } else if(file.type === "dir"){
                     await fetchFiles(file.path);
                 }
@@ -125,7 +125,7 @@ async function importGithubRepo(repoUrl, token){
         }
 
         await fetchFiles();
-        renderBlocks();
+        renderCommands();
         alert("GitHub Repo erfolgreich importiert!");
     } catch(err){
         alert("Fehler beim Import: " + err.message);
@@ -141,8 +141,8 @@ document.getElementById("importGithubBtn").addEventListener("click", ()=>{
 // ===== JS-Code generieren =====
 document.getElementById("generateBtn").addEventListener("click", ()=>{
     let code = "";
-    blocks.forEach(b=>{
-        code += `// ===== ${b.name} =====\n${b.code}\n\n`;
+    commands.forEach(c=>{
+        code += `// ===== ${c.name} =====\n${c.code}\n\n`;
     });
     document.getElementById("output").value = code;
 });
@@ -150,16 +150,16 @@ document.getElementById("generateBtn").addEventListener("click", ()=>{
 // ===== Projekt als ZIP speichern =====
 document.getElementById("downloadBtn").addEventListener("click", ()=>{
     const zip = new JSZip();
-    blocks.forEach(b=>{
-        zip.file(b.name+".js", b.code);
+    commands.forEach(c=>{
+        zip.file(c.name+".js", c.code);
     });
     zip.generateAsync({type:"blob"}).then(content=>{
         saveAs(content, "projekt.zip");
     });
 });
 
-// ===== Button Block erstellen =====
-document.getElementById("addBlockBtn").addEventListener("click", ()=>createBlock());
+// ===== Button Befehl erstellen =====
+document.getElementById("addCommandBtn").addEventListener("click", ()=>createCommand());
 
 </script>
 
