@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profi JS-Block Generator</title>
+<style>
+body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+h1 { color: #333; }
+button, input, textarea { margin: 5px 0; padding: 8px; width: 100%; }
+#blocksContainer { margin-top: 20px; }
+.block { background: #fff; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+textarea { width: 100%; height: 150px; }
+</style>
+</head>
+<body>
+
+<h1>Profi JS-Block Generator</h1>
+
+<div>
+    <label for="folderInput">Projekt-Ordner auswählen:</label>
+    <input type="file" id="folderInput" webkitdirectory directory multiple>
+</div>
+
+<div>
+    <button id="addBlockBtn">Neuen Block erstellen</button>
+    <button id="generateBtn">JS-Code generieren</button>
+    <button id="downloadBtn">Projekt als ZIP speichern</button>
+</div>
+
+<div id="blocksContainer"></div>
+<textarea id="output" placeholder="Hier erscheint der generierte JS-Code..."></textarea>
+
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+<script>
+let blocks = [];
+
+// ===== Block erstellen =====
+function createBlock(name="Neuer Block", code="// JS-Code hier"){
+    const block = {
+        id: Date.now(),
+        name: name,
+        code: code
+    };
+    blocks.push(block);
+    renderBlocks();
+}
+
+// ===== Blöcke rendern =====
+function renderBlocks(){
+    const container = document.getElementById("blocksContainer");
+    container.innerHTML = "";
+    blocks.forEach(b=>{
+        const div = document.createElement("div");
+        div.className = "block";
+        div.innerHTML = `
+            <label>Name:</label>
+            <input type="text" value="${b.name}" oninput="updateBlockName(${b.id}, this.value)">
+            <br>
+            <label>JS-Code:</label>
+            <textarea oninput="updateBlockCode(${b.id}, this.value)">${b.code}</textarea>
+            <br>
+            <button onclick="removeBlock(${b.id})">Block löschen</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function updateBlockName(id, value){
+    const block = blocks.find(b=>b.id===id);
+    if(block) block.name = value;
+}
+function updateBlockCode(id, value){
+    const block = blocks.find(b=>b.id===id);
+    if(block) block.code = value;
+}
+function removeBlock(id){
+    blocks = blocks.filter(b=>b.id!==id);
+    renderBlocks();
+}
+
+// ===== Ordner einlesen =====
+document.getElementById("folderInput").addEventListener("change", e=>{
+    const files = e.target.files;
+    for(let file of files){
+        if(file.name.endsWith(".js")){
+            const reader = new FileReader();
+            reader.onload = (evt)=>{
+                createBlock(file.name, evt.target.result);
+            };
+            reader.readAsText(file);
+        }
+    }
+});
+
+// ===== JS-Code generieren =====
+document.getElementById("generateBtn").addEventListener("click", ()=>{
+    let code = "";
+    blocks.forEach(b=>{
+        code += `// ===== ${b.name} =====\n${b.code}\n\n`;
+    });
+    document.getElementById("output").value = code;
+});
+
+// ===== Projekt als ZIP speichern =====
+document.getElementById("downloadBtn").addEventListener("click", ()=>{
+    const zip = new JSZip();
+    blocks.forEach(b=>{
+        zip.file(b.name+".js", b.code);
+    });
+    zip.generateAsync({type:"blob"}).then(content=>{
+        saveAs(content, "projekt.zip");
+    });
+});
+
+// ===== Button zum Block erstellen =====
+document.getElementById("addBlockBtn").addEventListener("click", ()=>createBlock());
+
+</script>
+
+</body>
+</html>
