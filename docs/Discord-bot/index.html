@@ -3,29 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Profi JS-Block Generator</title>
+<title>Profi Bot Builder</title>
 <style>
 body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
 h1 { color: #333; }
 button, input, textarea { margin: 5px 0; padding: 8px; width: 100%; }
 #blocksContainer { margin-top: 20px; }
 .block { background: #fff; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-textarea { width: 100%; height: 150px; }
+textarea { width: 100%; height: 120px; }
 </style>
 </head>
 <body>
 
-<h1>Profi JS-Block Generator</h1>
+<h1>Profi Bot Builder</h1>
 
 <div>
-    <label for="folderInput">Projekt-Ordner auswählen:</label>
-    <input type="file" id="folderInput" webkitdirectory directory multiple>
+  <label>Projekt-Ordner auswählen:</label>
+  <input type="file" id="folderInput" webkitdirectory directory multiple>
 </div>
 
 <div>
-    <button id="addBlockBtn">Neuen Block erstellen</button>
-    <button id="generateBtn">JS-Code generieren</button>
-    <button id="downloadBtn">Projekt als ZIP speichern</button>
+  <label>GitHub Repo (Link + Token):</label>
+  <input type="text" id="githubLink" placeholder="Repo Link z.B. https://github.com/user/repo">
+  <input type="text" id="githubToken" placeholder="Personal Access Token (falls privat)">
+  <button id="importGithubBtn">GitHub Repo importieren</button>
+</div>
+
+<div>
+  <button id="addBlockBtn">Neuen Block erstellen</button>
+  <button id="generateBtn">JS-Code generieren</button>
+  <button id="downloadBtn">Projekt als ZIP speichern</button>
 </div>
 
 <div id="blocksContainer"></div>
@@ -39,11 +46,7 @@ let blocks = [];
 
 // ===== Block erstellen =====
 function createBlock(name="Neuer Block", code="// JS-Code hier"){
-    const block = {
-        id: Date.now(),
-        name: name,
-        code: code
-    };
+    const block = { id: Date.now(), name, code };
     blocks.push(block);
     renderBlocks();
 }
@@ -68,6 +71,7 @@ function renderBlocks(){
     });
 }
 
+// ===== Block Update & Remove =====
 function updateBlockName(id, value){
     const block = blocks.find(b=>b.id===id);
     if(block) block.name = value;
@@ -81,7 +85,7 @@ function removeBlock(id){
     renderBlocks();
 }
 
-// ===== Ordner einlesen =====
+// ===== Ordnerintegration =====
 document.getElementById("folderInput").addEventListener("change", e=>{
     const files = e.target.files;
     for(let file of files){
@@ -93,6 +97,45 @@ document.getElementById("folderInput").addEventListener("change", e=>{
             reader.readAsText(file);
         }
     }
+});
+
+// ===== GitHub Integration =====
+async function importGithubRepo(repoUrl, token){
+    try{
+        const parts = repoUrl.replace("https://github.com/", "").split("/");
+        const owner = parts[0];
+        const repo = parts[1];
+
+        async function fetchFiles(path=""){
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            const res = await fetch(url, {
+                headers: token ? { Authorization: `token ${token}` } : {}
+            });
+            if(!res.ok) throw new Error("GitHub API Fehler");
+            const data = await res.json();
+            for(const file of data){
+                if(file.type === "file" && file.name.endsWith(".js")){
+                    const fileRes = await fetch(file.download_url);
+                    const content = await fileRes.text();
+                    createBlock(file.name, content);
+                } else if(file.type === "dir"){
+                    await fetchFiles(file.path);
+                }
+            }
+        }
+
+        await fetchFiles();
+        renderBlocks();
+        alert("GitHub Repo erfolgreich importiert!");
+    } catch(err){
+        alert("Fehler beim Import: " + err.message);
+    }
+}
+
+document.getElementById("importGithubBtn").addEventListener("click", ()=>{
+    const url = document.getElementById("githubLink").value;
+    const token = document.getElementById("githubToken").value;
+    if(url) importGithubRepo(url, token);
 });
 
 // ===== JS-Code generieren =====
@@ -115,7 +158,7 @@ document.getElementById("downloadBtn").addEventListener("click", ()=>{
     });
 });
 
-// ===== Button zum Block erstellen =====
+// ===== Button Block erstellen =====
 document.getElementById("addBlockBtn").addEventListener("click", ()=>createBlock());
 
 </script>
