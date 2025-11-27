@@ -1,0 +1,42 @@
+name: Extract all TAR.GZ files to main
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "**/*.tar.gz"
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with credentials
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true  # WICHTIG: erlaubt Push
+
+      - name: Find and extract all .tar.gz files
+        run: |
+          files=$(find . -type f -name "*.tar.gz")
+          if [ -z "$files" ]; then
+            echo "Keine TAR.GZ Dateien gefunden."
+            exit 0
+          fi
+          for file in $files; do
+            dir=$(dirname "$file")
+            echo "Entpacke $file nach $dir ..."
+            tar -xzf "$file" -C "$dir"
+          done
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "Auto: extracted all TAR.GZ files" || echo "Nichts zu committen."
+
+      - name: Force push changes to main
+        run: |
+          git push origin main --force
