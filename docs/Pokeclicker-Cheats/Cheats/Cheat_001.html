@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ShinySpawn Script Copy Block</title>
+
+<style>
+    /* === Global Styles === */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Inter", sans-serif;
+        background: #f5f7fa;
+        display: flex;
+        justify-content: center;
+        padding: 50px 20px;
+        color: #1c1c1c;
+    }
+
+    /* === Container/Card === */
+    .card {
+        width: 100%;
+        max-width: 900px;
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 18px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 25px;
+        color: #2962ff;
+    }
+
+    p {
+        font-size: 17px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    /* === Copy Block / Code Block === */
+    pre {
+        background: #1e1e2f;
+        color: #f8f8f2;
+        padding: 25px;
+        border-radius: 12px;
+        overflow-x: auto;
+        font-family: "Fira Code", monospace;
+        font-size: 15px;
+        line-height: 1.5;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    /* Optional: copy button */
+    .copy-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #2962ff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: background 0.2s;
+    }
+
+    .copy-btn:hover {
+        background: #0039cb;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1>ShinySpawn Script</h1>
+    <p>This script spawns all Pokémon directly as shiny and sets level 100 with 5 billion damage. You can copy it easily from the block below.</p>
+    
+    <pre id="code-block">
+// ShinySpawn Script
+(() => {
+    console.log("🌟 Starting ShinySpawn: Add all Pokémon directly as shiny...");
+
+    const party = App.game.party;
+    if (!party) return console.warn("❌ Party system not found!");
+
+    const pokemonSources = [window.DataPokemon, window.pokemonList, window.pokemonMap];
+
+    if (Array.isArray(party.partyPokemon)) party.partyPokemon.splice(0);
+    if (Array.isArray(party.caughtPokemon)) party.caughtPokemon.splice(0);
+    console.log("🧹 Party cleared.");
+
+    const addedSet = new Set();
+    const allNewPokemon = [];
+
+    pokemonSources.forEach(src => {
+        if (!src) return;
+        Object.values(src).forEach(pData => {
+            if (!pData?.id || addedSet.has(pData.id)) return;
+            try {
+                const newPoke = party.gainPokemonById(pData.id, true);
+                if (!newPoke) return;
+                allNewPokemon.push(newPoke);
+                addedSet.add(pData.id);
+            } catch (e) {
+                console.warn(`⚠️ Error with ${pData.name || pData.id}:`, e);
+            }
+        });
+    });
+    
+    const fixPokemonStats = (pokemon) => {
+        pokemon.level = 100;
+        pokemon.attackBonusAmount = 5e9;
+    };
+
+    App.game.party.caughtPokemon.forEach(p => fixPokemonStats(p));
+
+    const oldLoad = App.game.party.fromJSON.bind(App.game.party);
+    App.game.party.fromJSON = function (json) {
+        oldLoad(json);
+        App.game.party.caughtPokemon.forEach(p => fixPokemonStats(p));
+    };
+
+    const oldGain = App.game.party.gainPokemonById.bind(App.game.party);
+    App.game.party.gainPokemonById = function (id, ...args) {
+        const result = oldGain(id, ...args);
+        const caught = App.game.party.caughtPokemon;
+        fixPokemonStats(caught[caught.length - 1]);
+        return result;
+    };
+
+    console.log(`✅ ${allNewPokemon.length} Pokémon spawned and patched to level 100 with 5 billion damage`);
+})();
+    </pre>
+</div>
+
+<script>
+    // Optional: copy button functionality
+    const pre = document.getElementById("code-block");
+
+    const button = document.createElement("button");
+    button.className = "copy-btn";
+    button.innerText = "Copy";
+    button.addEventListener("click", () => {
+        navigator.clipboard.writeText(pre.innerText).then(() => {
+            button.innerText = "Copied!";
+            setTimeout(() => button.innerText = "Copy", 1500);
+        });
+    });
+
+    pre.appendChild(button);
+</script>
+
+</body>
+</html>
