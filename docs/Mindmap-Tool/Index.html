@@ -1,0 +1,243 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Mindmap Creator</title>
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:white;display:flex;height:100vh}
+#tools{width:220px;background:#0b1220;padding:10px;box-sizing:border-box;overflow:auto}
+#tools button{width:100%;margin:4px 0;padding:8px;border:0;background:#16233a;color:#cbd5e1;border-radius:6px;cursor:pointer}
+#tools button.active{background:#7c3aed;color:white}
+#canvas{flex:1;background:#0f172a}
+svg{width:100%;height:100%}
+.node{fill:#083344;stroke:#0ea5a3;stroke-width:2;rx:10;ry:10}
+.nodeText{fill:white;font-size:14px}
+.path{stroke:#7fffd4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.selected{stroke:#7c3aed !important;stroke-width:3 !important}
+</style>
+</head>
+<body>
+
+<div id="tools">
+<button data-tool="select" class="active">Auswählen</button>
+<button data-tool="node">Knoten</button>
+<button data-tool="draw">Zeichnen</button>
+<button id="copy">Kopieren</button>
+<button id="paste">Einfügen</button>
+<button id="del">Löschen</button>
+<button id="expPng">Export PNG</button>
+<button id="expSvg">Export SVG</button>
+</div>
+
+<div id="canvas">
+<svg id="svg">
+<g id="vp"></g>
+</svg>
+</div>
+
+<script>
+const svg=document.getElementById("svg");
+const vp=document.getElementById("vp");
+let tool="select";
+let nodes=[],paths=[];
+let current=null;
+let selected=null;
+let clipboard=null;
+
+document.querySelectorAll("[data-tool]")
+.forEach(b=>b.onclick=()=>{
+document.querySelectorAll("[data-tool]").forEach(x=>x.classList.remove("active"));
+b.classList.add("active");
+tool=b.dataset.tool;
+});
+
+function uid(p){return p+"_"+Math.random().toString(36).slice(2,9);}
+function sp(ev){const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+
+function chaikin(p,it=2){if(p.length<3)return p;
+let r=p.map(x=>[x[0],x[1]]);
+for(let k=0;k<it;k++){
+ let n=[r[0]];
+ for(let i=0;i<r.length-1;i++){
+  let a=r[i],b=r[i+1];
+  n.push([0.75*a[0]+0.25*b[0],0.75*a[1]+0.25*b[1]]);
+  n.push([0.25*a[0]+0.75*b[0],0.25*a[1]+0.75*b[1]]);
+ }
+ n.push(r[r.length-1]);r=n;
+}
+return r;
+}
+
+function render(){
+vp.innerHTML="";
+paths.forEach(p=>{
+ let el=document.createElementNS("http://www.w3.org/2000/svg","path");
+ el.setAttribute("class","path"+(selected?.id===p.id?" selected":""));
+ el.setAttribute("d","M "+p.points.map(e=>e[0]+" "+e[1]).join(" L "));
+ el.dataset.id=p.id;el.dataset.type="path";
+ vp.appendChild(el);
+ p.el=el;
+});
+nodes.forEach(n=>{
+ let g=document.createElementNS("http://www.w3.org/2000/svg","g");
+ g.setAttribute("transform","translate("+n.x+","+n.y+")");
+ 
+ let r=document.createElementNS("http://www.w3.org/2000/svg","rect");
+ r.setAttribute("width",n.w);r.setAttribute("height",n.h);
+ r.setAttribute("class","node"+(selected?.id===n.id?" selected":""));
+ r.dataset.id=n.id;r.dataset.type="node";
+
+ let t=document.createElementNS("http://www.w3.org/2000/svg","text");
+ t.setAttribute("x",10);t.setAttribute("y",n.h/2+5);
+ t.setAttribute("class","nodeText");
+ t.textContent=n.text;
+
+ g.appendChild(r);g.appendChild(t);
+ vp.appendChild(g);
+ n.el=g;
+});
+}
+
+svg.onpointerdown = e=>{
+let p=sp(e);
+
+if(tool==="node"){
+ let n={id:uid("n"),x:p.x-70,y:p.y-20,w:140,h:40,text:"Knoten"};
+ nodes.push(n);
+ selected={type:"node",id:n.id};
+ render();return;
+}
+
+if(tool==="draw"){
+ current={id:uid("p"),points:[[p.x,p.y]]};
+ return;
+}
+
+selected = hitTest(p);
+render();
+if(selected){
+ if(selected.type==="node"){
+  let n=nodes.find(x=>x.id===selected.id);
+  current={drag:{type:"node",id:n.id,start:p,ox:n.x,oy:n.y}};
+ }
+ if(selected.type==="path"){
+  let pa=paths.find(x=>x.id===selected.id);
+  current={drag:{type:"path",id:pa.id,start:p,orig:pa.points.map(a=>[a[0],a[1]])}};
+ }
+}
+};
+
+svg.onpointermove=e=>{
+let p=sp(e);
+if(tool==="draw"&&current){
+ current.points.push([p.x,p.y]);
+ render();
+ return;
+}
+if(current&&current.drag){
+ let d=current.drag;
+ if(d.type==="node"){
+  let n=nodes.find(x=>x.id===d.id);
+  n.x=d.ox+(p.x-d.start.x);
+  n.y=d.oy+(p.y-d.start.y);
+  render();return;
+ }
+ if(d.type==="path"){
+  let pa=paths.find(x=>x.id===d.id);
+  let dx=p.x-d.start.x,dy=p.y-d.start.y;
+  pa.points=d.orig.map(a=>[a[0]+dx,a[1]+dy]);
+  render();return;
+ }
+}
+};
+
+svg.onpointerup=e=>{
+if(tool==="draw"&&current){
+ let pts=chaikin(current.points,2);
+ paths.push({id:current.id,points:pts});
+ current=null; render(); return;
+}
+current=null;
+};
+
+function hitTest(p){
+for(let i=nodes.length-1;i>=0;i--){
+ let n=nodes[i];
+ if(p.x>=n.x&&p.x<=n.x+n.w&&p.y>=n.y&&p.y<=n.y+n.h)
+  return{type:"node",id:n.id};
+}
+for(let i=paths.length-1;i>=0;i--){
+ let pa=paths[i];
+ for(let j=0;j<pa.points.length-1;j++){
+  if(segDist(p,pa.points[j],pa.points[j+1])<6)
+   return{type:"path",id:pa.id};
+ }
+}
+return null;
+}
+
+function segDist(p,a,b){
+let x=p.x,y=p.y,x1=a[0],y1=a[1],x2=b[0],y2=b[1];
+let A=x-x1,B=y-y1,C=x2-x1,D=y2-y1;
+let dot=A*C+B*D,len=C*C+D*D;
+let t=Math.max(0,Math.min(1,len?dot/len:0));
+let xx=x1+t*C,yy=y1+t*D;
+return Math.hypot(x-xx,y-yy);
+}
+
+document.getElementById("copy").onclick=()=>{
+ if(selected){
+  clipboard=JSON.parse(JSON.stringify(selected));
+ }
+};
+
+document.getElementById("paste").onclick=()=>{
+ if(!clipboard)return;
+ if(clipboard.type==="node"){
+  let n=nodes.find(x=>x.id===clipboard.id);
+  let c=JSON.parse(JSON.stringify(n));
+  c.id=uid("n");c.x+=20;c.y+=20;
+  nodes.push(c);selected={type:"node",id:c.id};
+ }
+ if(clipboard.type==="path"){
+  let pa=paths.find(x=>x.id===clipboard.id);
+  let c=JSON.parse(JSON.stringify(pa));
+  c.id=uid("p");
+  c.points=c.points.map(a=>[a[0]+20,a[1]+20]);
+  paths.push(c);selected={type:"path",id:c.id};
+ }
+ render();
+};
+
+document.getElementById("del").onclick=()=>{
+ if(!selected)return;
+ if(selected.type==="node") nodes=nodes.filter(n=>n.id!==selected.id);
+ if(selected.type==="path") paths=paths.filter(p=>p.id!==selected.id);
+ selected=null;render();
+};
+
+document.getElementById("expSvg").onclick=()=>{
+ let s=new Blob([svg.outerHTML],{type:"image/svg+xml"});
+ let a=document.createElement("a");a.href=URL.createObjectURL(s);a.download="mindmap.svg";a.click();
+};
+
+document.getElementById("expPng").onclick=()=>{
+ let xml=new Blob([svg.outerHTML],{type:"image/svg+xml"});
+ let url=URL.createObjectURL(xml);
+ let img=new Image();
+ img.onload=function(){
+  let c=document.createElement("canvas");
+  c.width=svg.clientWidth;c.height=svg.clientHeight;
+  let ctx=c.getContext("2d");
+  ctx.drawImage(img,0,0);
+  let a=document.createElement("a");
+  a.href=c.toDataURL("image/png");
+  a.download="mindmap.png";a.click();
+ };
+ img.src=url;
+};
+render();
+</script>
+
+</body>
+</html>
