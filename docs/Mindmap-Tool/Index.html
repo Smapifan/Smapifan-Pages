@@ -1,19 +1,19 @@
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Mindmap Creator — All Features (Ein Datei)</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mindmap Creator — Stable</title>
 <style>
   :root{
-    --bg:#071024; --panel:#0b1726; --accent:#7c3aed; --muted:#9fb0c8;
-    --node:#0ea5a3; --nodeText:#e6f6f5;
+    --bg:#071022; --panel:#0b1726; --accent:#7c3aed; --muted:#9fb0c8;
+    --node:#0ea5a3; --text:#e6f6f5;
   }
-  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;color:var(--nodeText);background:linear-gradient(180deg,#041022,#07102a);}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#041022,#07102a);color:var(--text)}
   .app{display:grid;grid-template-columns:320px 1fr;gap:12px;padding:12px;height:100vh;box-sizing:border-box}
   .panel{background:linear-gradient(180deg,var(--panel),#071126);padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,.6);overflow:auto}
   h1{margin:4px 0 12px;font-size:18px}
-  .row{display:flex;gap:8px;align-items:center;margin:8px 0}
+  .row{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
   .btn{background:transparent;border:1px solid rgba(255,255,255,.06);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
   .btn.active{border-color:var(--accent);color:#fff;box-shadow:0 8px 18px rgba(124,58,237,.08)}
   label{font-size:13px;color:var(--muted)}
@@ -21,34 +21,30 @@
   #canvasWrap{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(2,6,23,.6)}
   svg#canvas{width:100%;height:calc(100vh - 48px);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);display:block;touch-action:none}
   .status{position:absolute;right:12px;top:12px;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:8px;font-size:13px;color:var(--muted)}
+  input[type=range]{width:120px}
   .kbd{background:#07122a;padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,.03);font-size:12px;color:var(--muted)}
-  input[type=range]{width:100%}
   footer{font-size:12px;color:var(--muted);margin-top:8px}
-  /* responsive */
-  @media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:240px 1fr}}
+  @media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:260px 1fr}}
 </style>
 </head>
 <body>
 
 <div class="app">
   <div class="panel">
-    <h1>Mindmap Creator — Alle Funktionen</h1>
+    <h1>Mindmap Creator — Stable</h1>
 
     <div class="row">
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        <button class="btn active" data-tool="select">Auswählen</button>
-        <button class="btn" data-tool="node">Knoten</button>
-        <button class="btn" data-tool="draw">Freihand</button>
-        <button class="btn" data-tool="connect">Verbinden</button>
+        <button class="btn active" data-tool="select">1: Auswählen</button>
+        <button class="btn" data-tool="node">2: Knoten</button>
+        <button class="btn" data-tool="draw">3: Freihand</button>
+        <button class="btn" data-tool="connect">4: Verbinden</button>
       </div>
     </div>
 
     <div class="row">
       <label><input id="beautify" type="checkbox" checked> Auto-Verschönern (Chaikin)</label>
-    </div>
-
-    <div class="row">
-      <label class="small">Stiftstärke: <input id="stroke" type="range" min="1" max="8" value="2"></label>
+      <label style="margin-left:12px">Stift: <input id="stroke" type="range" min="1" max="8" value="2"></label>
     </div>
 
     <div class="row">
@@ -60,7 +56,7 @@
     <div class="row">
       <button class="btn" id="undo">Undo</button>
       <button class="btn" id="redo">Redo</button>
-      <label style="margin-left:8px" class="small"><input id="snap" type="checkbox"> Snap-to-grid</label>
+      <label style="margin-left:8px"><input id="snap" type="checkbox"> Snap-to-grid</label>
     </div>
 
     <div class="row">
@@ -75,15 +71,11 @@
       <button class="btn" id="loadFile">Lade .mindmap</button>
     </div>
 
-    <div class="row">
-      <label class="small">Hintergrund: Bild hierher ziehen (Drag & Drop)</label>
-    </div>
-
     <div class="row small">
-      <div>Tipps: Klicken für Knoten. Ziehen zum Verschieben. Doppelklick Knotentext zum Bearbeiten. Strg/Cmd+Z Rückgängig, Strg/Cmd+Y Wiederherstellen.</div>
+      <div>Tipps: Doppelklick auf Knoten um zu bearbeiten. Ziehen zum Verschieben. Strg/Cmd+Z Rückgängig, Strg/Cmd+Y Wiederherstellen.</div>
     </div>
 
-    <footer>Export, Kopieren/Einfügen, Undo/Redo, Auto-Verschönerung und lokales Speichern sind verfügbar.</footer>
+    <footer>Funktional: Knoten erstellen/umbenennen, verschieben, freihand zeichnen mit Verschönerung, Verbinden, Export, Undo/Redo und Speichern.</footer>
   </div>
 
   <div id="canvasWrap">
@@ -101,21 +93,14 @@
 </div>
 
 <script>
-/* Mindmap Creator — Single file
-   Features included:
-   - Nodes (create, move, edit)
-   - Connect nodes with smooth cubic curves
-   - Freehand drawing with Chaikin smoothing
-   - Copy/Paste, Delete
-   - Undo/Redo (history)
-   - Snap-to-grid, Auto-layout (simple)
-   - Export PNG/SVG, Save/Load .mindmap
-   - Drag & drop background image
-   - Pointer events (mouse + touch)
+/* Vollständig überarbeitete, stabile Ein-Datei Mindmap.
+   - Knoten sind editierbar (Doppelklick öffnet Edit)
+   - Auto-Verschönerung für Freihand funktioniert
+   - Copy/Paste, Undo/Redo, Export, Save/Load, Connect, Snap
 */
 
-(() => {
-  // Elements
+(function(){
+  // DOM
   const svg = document.getElementById('canvas');
   const nodesG = document.getElementById('nodes');
   const linksG = document.getElementById('links');
@@ -123,43 +108,37 @@
   const status = document.getElementById('status');
 
   // state
-  let tool = 'select'; // select | node | draw | connect
-  let nodes = []; // {id,x,y,w,h,text}
-  let links = []; // {id,from,to}
-  let drawings = []; // freehand paths {id,points,stroke}
-  let current = null; // temp state for drawing/dragging/connecting
+  let tool = 'select';
+  let nodes = [];   // {id,x,y,w,h,text}
+  let links = [];   // {id,from,to}
+  let drawings = []; // {id,points,stroke}
+  let current = null;
   let selected = null; // {type,id}
   let clipboard = null;
   let history = []; let historyIndex = -1;
   let bgImageDataUrl = null;
 
   // settings
-  const settings = {
-    stroke: 2,
-    beautify: true,
-    snap: false,
-    gridSize: 16
-  };
+  const settings = { stroke:2, beautify:true, snap:false, gridSize:16 };
 
-  // utils
+  // util
   const uid = (p='id') => `${p}_${Math.random().toString(36).slice(2,9)}`;
-  function setStatus(s){ status.textContent = s;}
-  function svgPoint(clientX, clientY){
-    const pt = svg.createSVGPoint(); pt.x=clientX; pt.y=clientY;
+  function setStatus(s){ status.textContent = s; }
+  function svgPoint(clientX,clientY){
+    const pt = svg.createSVGPoint(); pt.x = clientX; pt.y = clientY;
     return pt.matrixTransform(svg.getScreenCTM().inverse());
   }
-  function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
 
   // Chaikin smoothing
   function chaikin(points, iterations=2){
     if (!points || points.length < 3) return points.slice();
-    let res = points.map(p => [p[0],p[1]]);
+    let res = points.map(p=>[p[0],p[1]]);
     for (let it=0; it<iterations; it++){
       const next = [res[0]];
       for (let i=0;i<res.length-1;i++){
-        const p0=res[i], p1=res[i+1];
-        next.push([0.75*p0[0]+0.25*p1[0], 0.75*p0[1]+0.25*p1[1]]);
-        next.push([0.25*p0[0]+0.75*p1[0], 0.25*p0[1]+0.75*p1[1]]);
+        const a=res[i], b=res[i+1];
+        next.push([0.75*a[0]+0.25*b[0], 0.75*a[1]+0.25*b[1]]);
+        next.push([0.25*a[0]+0.75*b[0], 0.25*a[1]+0.75*b[1]]);
       }
       next.push(res[res.length-1]);
       res = next;
@@ -167,14 +146,13 @@
     return res;
   }
 
-  // Render
+  // render
   function render(){
-    // background image
+    // background pattern if set
     const bgRect = document.getElementById('bgRect');
     if (bgImageDataUrl){
-      bgRect.setAttribute('fill', `url(#bgPattern)`);
-      // ensure pattern exists
-      if (!document.getElementById('bgPattern')) {
+      // ensure pattern present
+      if (!document.getElementById('bgPattern')){
         const defs = svg.querySelector('defs');
         const p = document.createElementNS('http://www.w3.org/2000/svg','pattern');
         p.setAttribute('id','bgPattern'); p.setAttribute('patternUnits','userSpaceOnUse');
@@ -187,20 +165,21 @@
         p.setAttribute('width', svg.clientWidth); p.setAttribute('height', svg.clientHeight);
         const im = p.querySelector('image'); im.setAttribute('href', bgImageDataUrl);
       }
+      bgRect.setAttribute('fill','url(#bgPattern)');
     } else {
-      bgRect.setAttribute('fill', 'transparent');
+      bgRect.setAttribute('fill','transparent');
     }
 
     // links
     linksG.innerHTML = '';
-    for (const l of links){
+    links.forEach(l => {
       const from = nodes.find(n=>n.id===l.from), to = nodes.find(n=>n.id===l.to);
-      if(!from || !to) continue;
+      if (!from || !to) return;
       const sx = from.x + from.w/2, sy = from.y + from.h/2;
       const tx = to.x + to.w/2, ty = to.y + to.h/2;
       const dx = tx - sx;
-      const c1x = sx + dx * 0.35;
-      const c2x = tx - dx * 0.35;
+      const c1x = sx + dx*0.35;
+      const c2x = tx - dx*0.35;
       const d = `M ${sx} ${sy} C ${c1x} ${sy} ${c2x} ${ty} ${tx} ${ty}`;
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
       path.setAttribute('d', d);
@@ -209,139 +188,173 @@
       path.setAttribute('fill','none');
       path.setAttribute('opacity', 0.95);
       linksG.appendChild(path);
-    }
+    });
 
-    // drawings (freehand)
+    // drawings
     pathsG.innerHTML = '';
-    for (const p of drawings){
+    drawings.forEach(p => {
       const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-      path.setAttribute('d', ptsToD(p.points));
+      path.setAttribute('d', pointsToD(p.points));
       path.setAttribute('stroke', (selected && selected.type==='path' && selected.id===p.id) ? '#fff' : '#7fffd4');
       path.setAttribute('stroke-width', p.stroke || settings.stroke);
       path.setAttribute('fill','none');
       path.setAttribute('stroke-linecap','round');
       path.setAttribute('stroke-linejoin','round');
       pathsG.appendChild(path);
-    }
+    });
 
-    // nodes
+    // nodes (SVG groups with foreignObject for editable text)
     nodesG.innerHTML = '';
-    for (const n of nodes){
+    nodes.forEach(n => {
       const g = document.createElementNS('http://www.w3.org/2000/svg','g');
       g.setAttribute('transform', `translate(${n.x},${n.y})`);
       g.setAttribute('data-id', n.id);
-      // rect
+
       const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
       rect.setAttribute('width', n.w); rect.setAttribute('height', n.h);
-      rect.setAttribute('rx', Math.min(12, n.h/2)); rect.setAttribute('ry', Math.min(12,n.h/2));
-      rect.setAttribute('fill', '#062d36'); rect.setAttribute('stroke', (selected && selected.type==='node' && selected.id===n.id) ? '#7c3aed' : '#0ea5a3');
+      rect.setAttribute('rx', Math.min(12,n.h/2)); rect.setAttribute('ry', Math.min(12,n.h/2));
+      rect.setAttribute('fill', '#062d36');
+      rect.setAttribute('stroke', (selected && selected.type==='node' && selected.id===n.id) ? '#7c3aed' : '#0ea5a3');
       rect.setAttribute('stroke-width', (selected && selected.type==='node' && selected.id===n.id) ? 3 : 1.6);
       rect.setAttribute('filter','url(#shadow)');
       g.appendChild(rect);
-      // text
-      const textEl = document.createElementNS('http://www.w3.org/2000/svg','text');
-      textEl.setAttribute('x', 12); textEl.setAttribute('y', n.h/2 + 6);
-      textEl.setAttribute('fill','#e6f6f5'); textEl.setAttribute('font-size',14);
-      const textNode = document.createTextNode(n.text);
-      textEl.appendChild(textNode);
-      g.appendChild(textEl);
+
+      // use foreignObject to allow HTML contentEditable (reliable renaming)
+      const fo = document.createElementNS('http://www.w3.org/2000/svg','foreignObject');
+      fo.setAttribute('x', 0); fo.setAttribute('y', 0); fo.setAttribute('width', n.w); fo.setAttribute('height', n.h);
+      const div = document.createElement('div');
+      div.setAttribute('xmlns','http://www.w3.org/1999/xhtml');
+      div.style.width = (n.w) + 'px';
+      div.style.height = (n.h) + 'px';
+      div.style.display = 'flex';
+      div.style.alignItems = 'center';
+      div.style.paddingLeft = '10px';
+      div.style.color = '#e6f6f5';
+      div.style.fontSize = '14px';
+      div.style.outline = 'none';
+      div.textContent = n.text;
+      div.setAttribute('contenteditable','false'); // default not editable; enable on double click
+
+      // double-click to edit
+      div.addEventListener('dblclick', (ev) => {
+        ev.stopPropagation();
+        div.setAttribute('contenteditable','true');
+        div.focus();
+        // place caret at end
+        document.execCommand('selectAll', false, null);
+        document.getSelection().collapseToEnd();
+      });
+
+      // commit edit when leaving
+      div.addEventListener('blur', ()=>{
+        div.setAttribute('contenteditable','false');
+        n.text = div.textContent.trim() || 'Knoten';
+        pushHistory();
+        render();
+      });
+
+      // Enter to finish editing
+      div.addEventListener('keydown', (ev)=>{
+        if (ev.key === 'Enter'){ ev.preventDefault(); div.blur(); }
+      });
+
+      fo.appendChild(div);
+      g.appendChild(fo);
       nodesG.appendChild(g);
-    }
+    });
   }
 
-  function ptsToD(pts){
-    if(!pts || pts.length===0) return '';
-    return 'M ' + pts.map(p => `${p[0]} ${p[1]}`).join(' L ');
-  }
+  function pointsToD(pts){ if(!pts || pts.length===0) return ''; return 'M '+ pts.map(p => `${p[0]} ${p[1]}`).join(' L '); }
 
-  // hit testing
+  // hit tests
   function hitNode(pt){
-    for (let i=nodes.length-1; i>=0; i--){
+    for (let i=nodes.length-1;i>=0;i--){
       const n = nodes[i];
       if (pt.x >= n.x && pt.x <= n.x + n.w && pt.y >= n.y && pt.y <= n.y + n.h) return n;
     }
     return null;
   }
-  function hitPath(pt){
+  function hitDrawing(pt){
     for (let i=drawings.length-1;i>=0;i--){
       const p = drawings[i];
       for (let j=0;j<p.points.length-1;j++){
-        if (segDist(pt, p.points[j], p.points[j+1]) < 8) return p;
+        if (segmentDistance(pt, p.points[j], p.points[j+1]) < 8) return p;
       }
     }
     return null;
   }
-  function segDist(p,a,b){
-    const x=p.x,y=p.y; const x1=a[0],y1=a[1],x2=b[0],y2=b[1];
+  function segmentDistance(p,a,b){
+    const x=p.x,y=p.y,x1=a[0],y1=a[1],x2=b[0],y2=b[1];
     const A=x-x1,B=y-y1,C=x2-x1,D=y2-y1;
     const dot = A*C + B*D; const len_sq = C*C + D*D;
-    let t = (len_sq===0)?0:dot/len_sq; t = Math.max(0, Math.min(1,t));
+    let t = len_sq===0 ? 0 : dot/len_sq; t = Math.max(0,Math.min(1,t));
     const xx = x1 + t*C, yy = y1 + t*D;
     return Math.hypot(x-xx,y-yy);
   }
 
   // pointer handlers
-  svg.addEventListener('pointerdown', (e) => {
+  svg.addEventListener('pointerdown', (e)=>{
     svg.setPointerCapture(e.pointerId);
     const p = svgPoint(e.clientX, e.clientY);
+
     if (tool === 'node'){
-      const n = { id: uid('n'), x:p.x-90, y:p.y-20, w:180, h:44, text:'Neuer Knoten' };
+      const n = { id: uid('n'), x: p.x - 90, y: p.y - 22, w: 180, h: 44, text: 'Knoten' };
       nodes.push(n); pushHistory(); selected = {type:'node', id:n.id}; render(); updateStatus();
       return;
     }
     if (tool === 'draw'){
-      current = { type:'draw', id: uid('p'), points:[[p.x,p.y]], stroke: settings.stroke };
+      current = { type:'draw', id: uid('p'), points: [[p.x,p.y]], stroke: settings.stroke };
       return;
     }
-    // select / drag / connect
-    const hitN = hitNode(p);
+
     if (tool === 'connect'){
-      if (hitN){
-        if (!current || !current.connectFrom){
-          current = { connectFrom: hitN.id };
-          setStatus('Verbinde: wählen Sie Zielknoten');
-        } else {
-          const from = current.connectFrom, to = hitN.id;
-          if (from !== to){
-            const l = { id: uid('l'), from, to }; links.push(l); pushHistory(); render();
-          }
+      const hit = hitNode(p);
+      if (hit){
+        if (!current || !current.connectFrom){ current = { connectFrom: hit.id }; setStatus('Verbinde: Ziel auswählen'); }
+        else {
+          const from = current.connectFrom, to = hit.id;
+          if (from !== to){ links.push({ id: uid('l'), from, to }); pushHistory(); render(); }
           current = null; updateStatus();
         }
       }
       return;
     }
-    // select node or path
+
+    // select / drag
+    const hitN = hitNode(p);
     if (hitN){
       selected = { type:'node', id: hitN.id };
       current = { drag: { type:'node', id: hitN.id, start: p, origX: hitN.x, origY: hitN.y } };
       render(); updateStatus();
       return;
     }
-    const hitP = hitPath(p);
+    const hitP = hitDrawing(p);
     if (hitP){
       selected = { type:'path', id: hitP.id };
-      current = { drag: { type:'path', id: hitP.id, start: p, orig: hitP.points.map(pt=>[pt[0],pt[1]]) } };
+      current = { drag: { type:'path', id: hitP.id, start: p, orig: hitP.points.map(pt=>[pt[0], pt[1]]) } };
       render(); updateStatus();
       return;
     }
+
     // clicked empty
     selected = null; render(); updateStatus();
   });
 
-  svg.addEventListener('pointermove', (e) => {
+  svg.addEventListener('pointermove', (e)=>{
     const p = svgPoint(e.clientX, e.clientY);
     if (!current) return;
     if (current.type === 'draw'){
-      current.points.push([p.x,p.y]); // live preview by temporarily adding to drawings
+      current.points.push([p.x,p.y]);
       render();
-      // show temp path
-      // note: we won't push temp to drawings until pointerup
+      // show preview last path (render will append actual set; to avoid duplication we simply allow live preview via pathsG last appended)
       const tmp = document.createElementNS('http://www.w3.org/2000/svg','path');
-      tmp.setAttribute('d', ptsToD(current.points));
-      tmp.setAttribute('stroke','#fff'); tmp.setAttribute('stroke-width', current.stroke || settings.stroke);
-      tmp.setAttribute('fill','none'); tmp.setAttribute('stroke-linecap','round');
+      tmp.setAttribute('d', pointsToD(current.points));
+      tmp.setAttribute('stroke', '#fff'); tmp.setAttribute('stroke-width', current.stroke || settings.stroke);
+      tmp.setAttribute('fill','none'); tmp.setAttribute('stroke-linecap','round'); tmp.setAttribute('opacity',0.7);
       pathsG.appendChild(tmp);
-    } else if (current.drag){
+      return;
+    }
+    if (current.drag){
       if (current.drag.type === 'node'){
         const n = nodes.find(x=>x.id===current.drag.id);
         if (!n) return;
@@ -359,7 +372,7 @@
     }
   });
 
-  svg.addEventListener('pointerup', (e) => {
+  svg.addEventListener('pointerup', (e)=>{
     svg.releasePointerCapture(e.pointerId);
     if (!current) return;
     if (current.type === 'draw'){
@@ -367,67 +380,61 @@
       if (settings.beautify) pts = chaikin(pts, 2);
       drawings.push({ id: current.id, points: pts, stroke: current.stroke || settings.stroke });
       current = null; pushHistory(); render(); updateStatus();
-    } else if (current.drag){
-      pushHistory(); current = null; updateStatus();
-    } else {
-      current = null;
+      return;
     }
+    if (current.drag){
+      pushHistory(); current = null; updateStatus();
+      return;
+    }
+    current = null;
   });
 
-  // toolbar interactions & keys
+  // toolbar buttons & UI
   document.querySelectorAll('.btn[data-tool]').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', ()=> {
       document.querySelectorAll('.btn[data-tool]').forEach(x=>x.classList.remove('active'));
-      b.classList.add('active'); tool = b.dataset.tool; updateStatus();
+      b.classList.add('active');
+      tool = b.dataset.tool;
+      updateStatus();
     });
   });
 
-  document.getElementById('beautify').addEventListener('change', (e)=>{ settings.beautify = e.target.checked; });
-  document.getElementById('stroke').addEventListener('input', (e)=>{ settings.stroke = parseInt(e.target.value,10); });
+  document.getElementById('beautify').addEventListener('change', (e)=> settings.beautify = e.target.checked);
+  document.getElementById('stroke').addEventListener('input', (e)=> settings.stroke = parseInt(e.target.value,10));
+  document.getElementById('snap').addEventListener('change', (e)=> settings.snap = e.target.checked);
 
   document.getElementById('copyBtn').addEventListener('click', ()=> copySelected());
   document.getElementById('pasteBtn').addEventListener('click', ()=> pasteClipboard());
-  document.getElementById('delBtn').addEventListener('click', ()=> {
-    if (!selected) return;
-    if (selected.type === 'node'){ nodes = nodes.filter(n => n.id !== selected.id); links = links.filter(l => l.from !== selected.id && l.to !== selected.id); }
-    if (selected.type === 'path'){ drawings = drawings.filter(p => p.id !== selected.id); }
-    if (selected.type === 'link'){ links = links.filter(l => l.id !== selected.id); }
-    selected = null; pushHistory(); render();
-  });
+  document.getElementById('delBtn').addEventListener('click', ()=> deleteSelected());
 
   document.getElementById('undo').addEventListener('click', ()=> undo());
   document.getElementById('redo').addEventListener('click', ()=> redo());
-  document.getElementById('snap').addEventListener('change', (e)=> { settings.snap = e.target.checked; });
-
   document.getElementById('autoLayout').addEventListener('click', ()=> { simpleAutoLayout(); pushHistory(); render(); });
 
-  // Export / Save / Load
-  document.getElementById('exportSVG').addEventListener('click', exportSVG);
-  document.getElementById('exportPNG').addEventListener('click', exportPNG);
-  document.getElementById('saveFile').addEventListener('click', saveToFile);
+  document.getElementById('exportSVG').addEventListener('click', ()=> exportSVG());
+  document.getElementById('exportPNG').addEventListener('click', ()=> exportPNG());
+  document.getElementById('saveFile').addEventListener('click', ()=> saveToFile());
   document.getElementById('loadFile').addEventListener('click', ()=> document.getElementById('fileLoad').click());
   document.getElementById('fileLoad').addEventListener('change', (ev)=> {
-    const f = ev.target.files[0];
-    if (!f) return;
+    const f = ev.target.files[0]; if (!f) return;
     const r = new FileReader();
-    r.onload = ()=> { try { loadFromJSON(JSON.parse(r.result)); } catch(err){ alert('Fehler beim Laden: ' + err); } };
-    r.readAsText(f);
-    ev.target.value = '';
+    r.onload = ()=> { try { loadFromJSON(JSON.parse(r.result)); } catch(err){ alert('Fehler beim Laden: '+err); } };
+    r.readAsText(f); ev.target.value='';
   });
 
   // keyboard shortcuts
-  window.addEventListener('keydown', (e) => {
+  window.addEventListener('keydown', (e)=>{
     const mod = e.metaKey || e.ctrlKey;
     if (mod && e.key.toLowerCase() === 'z'){ e.preventDefault(); undo(); return; }
     if ((mod && e.key.toLowerCase() === 'y') || (mod && e.shiftKey && e.key.toLowerCase()==='z')){ e.preventDefault(); redo(); return; }
     if (mod && e.key.toLowerCase() === 'c'){ e.preventDefault(); copySelected(); return; }
     if (mod && e.key.toLowerCase() === 'v'){ e.preventDefault(); pasteClipboard(); return; }
-    if (e.key === 'Delete' || e.key === 'Backspace'){ if (selected){ document.getElementById('delBtn').click(); } }
+    if (e.key === 'Delete' || e.key === 'Backspace'){ e.preventDefault(); deleteSelected(); return; }
   });
 
-  // copy/paste
+  // copy / paste / delete implementations
   function copySelected(){
-    if (!selected) return alert('Nichts ausgewählt zum Kopieren');
+    if (!selected) { setStatus('Nichts ausgewählt zum kopieren'); return; }
     if (selected.type === 'node'){
       const n = nodes.find(x=>x.id===selected.id);
       clipboard = { type:'node', payload: JSON.parse(JSON.stringify(n)) };
@@ -441,14 +448,14 @@
     setStatus('Kopiert');
   }
   function pasteClipboard(){
-    if (!clipboard) return;
+    if (!clipboard) { setStatus('Nichts in Zwischenablage'); return; }
     if (clipboard.type === 'node'){
       const c = JSON.parse(JSON.stringify(clipboard.payload));
       c.id = uid('n'); c.x += 20; c.y += 20;
       nodes.push(c); selected = {type:'node', id:c.id};
     } else if (clipboard.type === 'path'){
       const c = JSON.parse(JSON.stringify(clipboard.payload));
-      c.id = uid('p'); c.points = c.points.map(p => [p[0]+20,p[1]+20]);
+      c.id = uid('p'); c.points = c.points.map(a=>[a[0]+20,a[1]+20]);
       drawings.push(c); selected = {type:'path', id:c.id};
     } else if (clipboard.type === 'link'){
       const c = JSON.parse(JSON.stringify(clipboard.payload));
@@ -456,96 +463,114 @@
     }
     pushHistory(); render(); updateStatus();
   }
+  function deleteSelected(){
+    if (!selected) { setStatus('Nichts ausgewählt'); return; }
+    if (selected.type === 'node'){ nodes = nodes.filter(n=>n.id!==selected.id); links = links.filter(l=>l.from!==selected.id && l.to!==selected.id); }
+    if (selected.type === 'path'){ drawings = drawings.filter(p=>p.id!==selected.id); }
+    if (selected.type === 'link'){ links = links.filter(l=>l.id!==selected.id); }
+    selected = null; pushHistory(); render(); updateStatus();
+  }
 
-  // Undo/Redo (naive)
+  // undo/redo
   function pushHistory(){
-    const snapshot = JSON.stringify({nodes, links, drawings, bgImageDataUrl});
-    // trim future
+    const snapshot = JSON.stringify({ nodes, links, drawings, bgImageDataUrl });
     history = history.slice(0, historyIndex + 1);
     history.push(snapshot); historyIndex++;
+    if (history.length > 100) history.shift();
     updateStatus();
   }
   function undo(){
-    if (historyIndex <= 0) return;
+    if (historyIndex <= 0) { setStatus('Nichts rückgängig zu machen'); return; }
     historyIndex--; const snap = JSON.parse(history[historyIndex]);
     nodes = snap.nodes; links = snap.links; drawings = snap.drawings; bgImageDataUrl = snap.bgImageDataUrl;
     selected = null; render(); updateStatus();
   }
   function redo(){
-    if (historyIndex >= history.length - 1) return;
+    if (historyIndex >= history.length - 1) { setStatus('Nichts wiederherzustellen'); return; }
     historyIndex++; const snap = JSON.parse(history[historyIndex]);
     nodes = snap.nodes; links = snap.links; drawings = snap.drawings; bgImageDataUrl = snap.bgImageDataUrl;
     selected = null; render(); updateStatus();
   }
 
-  // export svg
+  // export functions
   function exportSVG(){
-    // clone svg and inline styles for background pattern
+    // clone and serialize SVG for export (inline CSS not required for simple shapes)
     const clone = svg.cloneNode(true);
-    // fix pattern href if present
+    // remove foreignObject contenteditable attributes while exporting
+    clone.querySelectorAll('foreignObject div').forEach(d=>{ d.removeAttribute('contenteditable'); });
     const serializer = new XMLSerializer(); const str = serializer.serializeToString(clone);
-    const blob = new Blob([str], {type:'image/svg+xml'});
+    const blob = new Blob([str], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'mindmap.svg'; a.click();
     URL.revokeObjectURL(url);
   }
 
-  // export png
   function exportPNG(){
     const serializer = new XMLSerializer();
-    const svgStr = serializer.serializeToString(svg);
+    const clone = svg.cloneNode(true);
+    // ensure foreignObject text is serialized properly: convert foreignObject divs to text nodes inside <text>
+    clone.querySelectorAll('foreignObject').forEach(fo=>{
+      const div = fo.querySelector('div');
+      const txt = div ? div.textContent : '';
+      const g = fo.parentNode;
+      const textEl = document.createElementNS('http://www.w3.org/2000/svg','text');
+      textEl.setAttribute('x', 12); textEl.setAttribute('y', parseFloat(fo.getAttribute('height'))/2 + 6);
+      textEl.setAttribute('font-size', 14); textEl.setAttribute('fill', '#e6f6f5');
+      textEl.textContent = txt;
+      g.replaceChild(textEl, fo);
+    });
+
+    const str = serializer.serializeToString(clone);
+    const blob = new Blob([str], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
     const img = new Image();
-    const svgBlob = new Blob([svgStr], {type: 'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(svgBlob);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = svg.clientWidth; canvas.height = svg.clientHeight;
-      const ctx = canvas.getContext('2d');
-      // white bg
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    img.onload = function(){
+      const c = document.createElement('canvas');
+      c.width = svg.clientWidth; c.height = svg.clientHeight;
+      const ctx = c.getContext('2d');
+      // white background
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,c.width,c.height);
       ctx.drawImage(img,0,0);
-      const png = canvas.toDataURL('image/png');
+      const png = c.toDataURL('image/png');
       const a = document.createElement('a'); a.href = png; a.download = 'mindmap.png'; a.click();
       URL.revokeObjectURL(url);
     };
+    img.onerror = function(){ alert('Fehler beim Generieren des PNG'); URL.revokeObjectURL(url); };
     img.src = url;
   }
 
-  // Save / Load JSON
+  // save / load .mindmap
   function saveToFile(){
     const data = { nodes, links, drawings, bgImageDataUrl };
-    const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'mindmap.mindmap'; a.click();
   }
-  function loadFromJSON(data){
-    nodes = data.nodes || []; links = data.links || []; drawings = data.drawings || []; bgImageDataUrl = data.bgImageDataUrl || null;
+  function loadFromJSON(obj){
+    nodes = obj.nodes || []; links = obj.links || []; drawings = obj.drawings || []; bgImageDataUrl = obj.bgImageDataUrl || null;
     pushHistory(); render(); updateStatus();
   }
 
-  // Drag & drop background image
-  function handleDropImage(file){
+  // drag & drop background image or .mindmap file
+  function handleImageFile(file){
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      bgImageDataUrl = ev.target.result;
-      pushHistory(); render();
-    };
+    reader.onload = (ev) => { bgImageDataUrl = ev.target.result; pushHistory(); render(); };
     reader.readAsDataURL(file);
   }
-  // drag/drop on canvasWrap area
-  svg.addEventListener('dragover', (e)=>{ e.preventDefault(); setStatus('Bild hierher ziehen...'); });
-  svg.addEventListener('dragleave', (e)=>{ updateStatus(); });
-  svg.addEventListener('drop', (e)=>{ e.preventDefault(); updateStatus();
+  svg.addEventListener('dragover', (e)=>{ e.preventDefault(); setStatus('Datei hierher ziehen (Bild oder .mindmap)'); });
+  svg.addEventListener('dragleave', ()=> updateStatus());
+  svg.addEventListener('drop', (e)=> {
+    e.preventDefault(); updateStatus();
     const f = e.dataTransfer.files[0]; if (!f) return;
-    if (f.type.startsWith('image/')) handleDropImage(f);
-    else { const fr = new FileReader(); fr.onload = ()=> { try { loadFromJSON(JSON.parse(fr.result)); } catch(err){ alert('Fehler beim Laden: ' + err); } }; fr.readAsText(f); }
+    if (f.type.startsWith('image/')) handleImageFile(f);
+    else { const r = new FileReader(); r.onload = ()=> { try { loadFromJSON(JSON.parse(r.result)); } catch(err){ alert('Fehler Laden: '+err); } }; r.readAsText(f); }
   });
 
-  // simple auto layout (radial around center)
+  // simple auto layout
   function simpleAutoLayout(){
+    if (nodes.length === 0) return;
     const centerX = svg.clientWidth / 2, centerY = svg.clientHeight / 2;
-    const radius = Math.min(centerX, centerY) * 0.6;
-    const root = nodes[0] || nodes[ Math.floor(Math.random()*nodes.length) ];
-    if (!root) return;
+    const radius = Math.min(centerX, centerY) * 0.55;
+    const root = nodes[0];
     root.x = centerX - root.w/2; root.y = centerY - root.h/2;
     const others = nodes.filter(n=>n.id !== root.id);
     for (let i=0;i<others.length;i++){
@@ -556,17 +581,14 @@
     render();
   }
 
-  // initial
+  // history init
   pushHistory(); render(); updateStatus();
 
   // helpers
-  function updateStatus(){ setStatus(`Tool: ${tool}${selected ? ' — Ausgewählt' : ''}`); }
+  function updateStatus(){ setStatus(`Tool: ${tool}${selected ? ' • Ausgewählt' : ''}`); }
 
-  // small helper to ensure svg resizes internal patterns if window changes
-  window.addEventListener('resize', ()=> { render(); });
-
-  // expose some in console for debugging
-  window.mindmap = { nodes, links, drawings, render, pushHistory, exportSVG, exportPNG };
+  // expose for debug
+  window.mindmap = { nodes, links, drawings, render, pushHistory };
 
 })();
 </script>
