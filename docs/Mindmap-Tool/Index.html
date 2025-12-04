@@ -1,17 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Mindmap WebApp - Final</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mindmap — Final (Premium)</title>
 <style>
-:root {
-  --bg:#071022; --panel:#0b1726; --accent:#7c3aed; --muted:#9fb0c8; 
-  --node:#0ea5a3; --text:#e6f6f5;
+:root{
+  --bg:#071022; --panel:#0b1726; --accent:#7c3aed; --muted:#9fb0c8; --node:#0ea5a3; --text:#e6f6f5;
 }
-html,body{margin:0;padding:0;height:100%;font-family:Inter,sans-serif;background:var(--bg);color:var(--text)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#041022,#07102a);color:var(--text)}
 .app{display:grid;grid-template-columns:320px 1fr;gap:12px;padding:12px;height:100vh}
-.panel{background:var(--panel);padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,.6);overflow:auto}
+.panel{background:linear-gradient(180deg,var(--panel),#071126);padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,.6);overflow:auto}
 h1{font-size:18px;margin:2px 0 12px}
 .row{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
 .btn{background:transparent;border:1px solid rgba(255,255,255,.06);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
@@ -20,18 +20,24 @@ h1{font-size:18px;margin:2px 0 12px}
 #canvasWrap{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(2,6,23,.6)}
 svg#canvas{width:100%;height:calc(100vh - 24px);display:block;touch-action:none;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent)}
 .status{position:absolute;right:12px;top:12px;background:rgba(0,0,0,.35);padding:6px 10px;border-radius:8px;font-size:13px;color:var(--muted)}
-.palette{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.colorBox{width:24px;height:24px;border-radius:4px;cursor:pointer;border:1px solid #fff}
-.colorBox.locked{opacity:0.4;filter:grayscale(70%)}
-.overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:100;display:none;flex-direction:column}
-.overlay video{max-width:90%;max-height:70%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.8)}
-.overlay button{margin-top:12px;padding:8px 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:14px;cursor:pointer}
+.kbd{background:#07122a;padding:4px 6px;border-radius:6px;border:1px solid rgba(255,255,255,.03);font-size:12px;color:var(--muted)}
+input[type=range]{width:120px}
+footer{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* Premium overlay */
+.overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;z-index:100;flex-direction:column;display:none;}
+.overlay video{max-width:90%;max-height:70%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.8);}
+.overlay button{margin-top:12px;padding:8px 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:14px;cursor:pointer;}
+
+.palette{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.colorBox{width:24px;height:24px;border-radius:4px;cursor:pointer;border:1px solid #fff;}
+.colorBox.locked{opacity:0.4;filter:grayscale(70%);}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="panel">
-    <h1>Mindmap WebApp</h1>
+    <h1>Mindmap — Final</h1>
 
     <div class="row">
       <button class="btn active" data-tool="select">1: Auswählen</button>
@@ -73,22 +79,20 @@ svg#canvas{width:100%;height:calc(100vh - 24px);display:block;touch-action:none;
       <div class="small">Linienfarbe:</div>
       <div class="palette" id="normalPalette"></div>
     </div>
-
     <div class="row">
       <div class="small">Premium-Farben:</div>
       <div class="palette" id="premiumPalette"></div>
     </div>
 
     <div class="row small">Tipps: Doppelklick Knoten = Edit. Strg/Cmd+Z = Rückgängig, Strg/Cmd+Y = Wiederherstellen.</div>
+    <footer>Verbinden ist robust: Linie folgt Knoten, anklickbar und löschbar.</footer>
   </div>
 
   <div id="canvasWrap">
     <div class="status" id="status">Tool: Auswählen</div>
     <svg id="canvas" xmlns="http://www.w3.org/2000/svg" tabindex="0">
       <defs>
-        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="6" stdDeviation="8" flood-opacity="0.12"/>
-        </filter>
+        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-opacity="0.12"/></filter>
       </defs>
       <rect id="bgRect" x="0" y="0" width="100%" height="100%" fill="transparent"/>
       <g id="linkLayer"></g>
@@ -98,114 +102,98 @@ svg#canvas{width:100%;height:calc(100vh - 24px);display:block;touch-action:none;
   </div>
 </div>
 
+<!-- Premium Video Overlay -->
 <div class="overlay" id="videoOverlay">
-  <video id="adVideo" controls autoplay></video>
+  <video id="adVideo" autoplay></video>
   <button id="closeOverlayBtn">Schließen</button>
 </div>
 
 <script>
 (() => {
-  const svg=document.getElementById('canvas'), nodeLayer=document.getElementById('nodeLayer'), linkLayer=document.getElementById('linkLayer'), drawLayer=document.getElementById('drawLayer'), status=document.getElementById('status');
+  // === Grundzustand ===
+  const svg = document.getElementById('canvas'), nodeLayer=document.getElementById('nodeLayer'), linkLayer=document.getElementById('linkLayer'), drawLayer=document.getElementById('drawLayer');
+  const status=document.getElementById('status');
   const normalPalette=document.getElementById('normalPalette'), premiumPalette=document.getElementById('premiumPalette');
   const videoOverlay=document.getElementById('videoOverlay'), adVideo=document.getElementById('adVideo'), closeOverlayBtn=document.getElementById('closeOverlayBtn');
 
-  // State
   let tool='select', nodes=[], links=[], drawings=[], current=null, selected=null, clipboard=null;
-  let history=[], histIndex=-1, lineColor='#7c3aed', premiumUnlocked=localStorage.getItem('premiumUnlocked')==='true';
-  const settings={stroke:2, beautify:true, snap:false, grid:16};
+  let settings={stroke:2, beautify:true, snap:false, grid:16};
+  let premiumUnlocked = localStorage.getItem('premiumUnlocked')==='true';
+  let lineColor='#7c3aed';
 
-  const uid=(p='id')=>`${p}_${Math.random().toString(36).slice(2,9)}`;
-
+  const uid = (p='id')=>`${p}_${Math.random().toString(36).slice(2,9)}`;
   function setStatus(txt){ status.textContent=txt; }
-  function svgPoint(cx,cy){const pt=svg.createSVGPoint();pt.x=cx;pt.y=cy;return pt.matrixTransform(svg.getScreenCTM().inverse());}
+  function svgPoint(cx,cy){ const pt=svg.createSVGPoint(); pt.x=cx; pt.y=cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); }
+  function chaikin(points,it=2){ if(!points||points.length<3)return points.slice(); let res=points.map(p=>[p[0],p[1]]); for(let k=0;k<it;k++){ const next=[res[0]]; for(let i=0;i<res.length-1;i++){ const p0=res[i],p1=res[i+1]; next.push([0.75*p0[0]+0.25*p1[0],0.75*p0[1]+0.25*p1[1]]); next.push([0.25*p0[0]+0.75*p1[0],0.25*p0[1]+0.75*p1[1]]);} next.push(res[res.length-1]); res=next;} return res; }
 
-  // Paletten
+  // === Palette ===
   const normalColors=['#7c3aed','#0ea5a3','#f59e0b','#ef4444','#10b981','#3b82f6'];
-  const premiumColors=['#ff00ff','#00ffff','#ffff00','#ff7f00','#ff1493','#00ff7f','#rainbow','glitter'];
+  const premiumColors=['glitter','rainbow','#ff00ff','#00ffff','#ffff00','#ff7f00','#ff1493','#00ff7f'];
 
-  function createPalette(palette, container, premium=false){
+  function renderPalette(colors, container, isPremium=false){
     container.innerHTML='';
-    palette.forEach(c=>{
-      const box=document.createElement('div');
-      box.classList.add('colorBox');
-      if(premium && !premiumUnlocked){box.classList.add('locked');}
-      if(c==='glitter'){box.style.background='linear-gradient(45deg, #f5a9f2, #ffffff, #ffd700)';}
-      else if(c==='rainbow'){box.style.background='linear-gradient(90deg, red,orange,yellow,green,blue,indigo,violet)';}
+    colors.forEach(c=>{
+      const box=document.createElement('div'); box.classList.add('colorBox');
+      if(isPremium && !premiumUnlocked) box.classList.add('locked');
+      if(c==='glitter') box.style.background='linear-gradient(45deg,#f5a9f2,#ffffff,#ffd700)';
+      else if(c==='rainbow') box.style.background='linear-gradient(90deg, red,orange,yellow,green,blue,indigo,violet)';
       else box.style.background=c;
       box.addEventListener('click',()=>{
-        if(premium && !premiumUnlocked){startAdVideo(); return;}
-        lineColor=c; setStatus(`Linienfarbe: ${c}`);});
+        if(isPremium && !premiumUnlocked){ startAdVideo(); return; }
+        lineColor=c; setStatus('Linienfarbe: '+c);
+      });
       container.appendChild(box);
     });
   }
-  createPalette(normalColors,normalPalette,false);
-  createPalette(premiumColors,premiumPalette,true);
+  renderPalette(normalColors, normalPalette,false);
+  renderPalette(premiumColors, premiumPalette,true);
 
+  // === Video Overlay ===
   function startAdVideo(){
     videoOverlay.style.display='flex';
-    adVideo.src='https://your-github-link/assets/'; // GitHub assets folder; random pick logic to be added
+    const videos=['video1.mp4','video2.mp4','video3.mp4']; // GitHub assets
+    const rand = videos[Math.floor(Math.random()*videos.length)];
+    adVideo.src='https://github.com/<USERNAME>/<REPO>/assets/'+rand;
     adVideo.play();
   }
   adVideo.addEventListener('ended',()=>{
     premiumUnlocked=true;
     localStorage.setItem('premiumUnlocked','true');
-    createPalette(premiumColors,premiumPalette,true);
+    renderPalette(premiumColors, premiumPalette,true);
     videoOverlay.style.display='none';
     setStatus('Premium Palette freigeschaltet!');
   });
-  closeOverlayBtn.addEventListener('click',()=>{adVideo.pause(); videoOverlay.style.display='none';});
+  closeOverlayBtn.addEventListener('click',()=>{ adVideo.pause(); videoOverlay.style.display='none'; });
 
-  // Simple radial layout
-  function radialLayout(){
-    if(nodes.length===0)return;
-    const cx=svg.clientWidth/2,cy=svg.clientHeight/2;
-    nodes[0].x=cx-nodes[0].w/2; nodes[0].y=cy-nodes[0].h/2;
-    nodes.slice(1).forEach((n,i)=>{
-      const ang=(i/(nodes.length-1))*Math.PI*2;
-      n.x=cx+Math.cos(ang)*150-n.w/2;
-      n.y=cy+Math.sin(ang)*150-n.h/2;
-    });
-    render();
-  }
-
+  // === Render Funktion ===
   function render(){
     // Links
     linkLayer.innerHTML='';
-    links.forEach(l=>{
-      const f=nodes.find(n=>n.id===l.from), t=nodes.find(n=>n.id===l.to); if(!f||!t)return;
-      const sx=f.x+f.w/2,sy=f.y+f.h/2,tx=t.x+t.w/2,ty=t.y+t.h/2;
-      const dx=tx-sx,c1x=sx+dx*0.35,c2x=tx-dx*0.35;
+    for(const l of links){
+      const f=nodes.find(n=>n.id===l.from), t=nodes.find(n=>n.id===l.to); if(!f||!t)continue;
+      const sx=f.x+f.w/2, sy=f.y+f.h/2, tx=t.x+t.w/2, ty=t.y+t.h/2;
+      const dx=tx-sx, c1x=sx+dx*0.35, c2x=tx-dx*0.35;
       const d=`M ${sx} ${sy} C ${c1x} ${sy} ${c2x} ${ty} ${tx} ${ty}`;
       const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-      path.setAttribute('d',d);
-      path.setAttribute('stroke',l.color||lineColor);
-      path.setAttribute('stroke-width',2.8);
-      path.setAttribute('fill','none');
-      pathLayerAppend(path,l.id);
-    });
+      path.setAttribute('d',d); path.setAttribute('stroke', l.color||lineColor);
+      path.setAttribute('stroke-width',2.8); path.setAttribute('fill','none'); path.setAttribute('data-id',l.id);
+      linkLayer.appendChild(path);
+    }
 
     // Nodes
     nodeLayer.innerHTML='';
-    nodes.forEach(n=>{
-      const g=document.createElementNS('http://www.w3.org/2000/svg','g');
-      g.setAttribute('transform',`translate(${n.x},${n.y})`);
-      const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
-      rect.setAttribute('width',n.w); rect.setAttribute('height',n.h);
-      rect.setAttribute('rx',12); rect.setAttribute('ry',12);
-      rect.setAttribute('fill','#062d36'); rect.setAttribute('stroke','#0ea5a3'); rect.setAttribute('stroke-width',1.6);
-      g.appendChild(rect);
-      nodeLayer.appendChild(g);
-    });
+    for(const n of nodes){
+      const g=document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('transform',`translate(${n.x},${n.y})`);
+      const rect=document.createElementNS('http://www.w3.org/2000/svg','rect'); rect.setAttribute('width',n.w); rect.setAttribute('height',n.h);
+      rect.setAttribute('rx',Math.min(12,n.h/2)); rect.setAttribute('ry',Math.min(12,n.h/2)); rect.setAttribute('fill','#062d36'); rect.setAttribute('stroke','#0ea5a3'); rect.setAttribute('stroke-width',1.6);
+      g.appendChild(rect); nodeLayer.appendChild(g);
+    }
   }
 
-  function pathLayerAppend(path,id){
-    path.setAttribute('data-id',id);
-    linkLayer.appendChild(path);
-  }
-
-  // Initial sample
-  nodes.push({id:uid(),x:100,y:80,w:140,h:40,text:'Konten 1'});
-  nodes.push({id:uid(),x:300,y:180,w:140,h:40,text:'Konten 2'});
+  // Initial nodes sample
+  nodes.push({id:uid('n'), x:80,y:60,w:160,h:44,text:'Zentrum'});
+  nodes.push({id:uid('n'), x:320,y:160,w:140,h:40,text:'Zweig A'});
+  links.push({id:uid('l'), from:nodes[0].id,to:nodes[1].id});
   render();
 
 })();
