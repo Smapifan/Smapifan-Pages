@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Set-Manager — Tabellen Creator</title>
+  <style>
+    :root{--accent:#0b74de;--bg:#f7f9fc;--muted:#666}
+    body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:18px; background:var(--bg); color:#111}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+    h1{font-size:18px;margin:0}
+    .controls{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+    button, label.filebtn{background:#fff;border:1px solid #ddd;padding:8px 10px;border-radius:8px;cursor:pointer}
+    button:hover, label.filebtn:hover{box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+    .file-input{display:none}
+    .toolbar{display:flex;gap:8px;margin-bottom:10px}
+
+    .table-wrap{overflow:auto;border:1px solid #e2e8f0;background:white;border-radius:8px;padding:8px}
+    table.set-table{width:100%;border-collapse:collapse;table-layout:auto}
+    table.set-table th, table.set-table td{border:1px solid #eee;padding:8px;min-width:80px;vertical-align:middle}
+    table.set-table th{background:#fbfdff;position:sticky;top:0}
+    td[contenteditable]{outline:none}
+
+    .small{font-size:13px;color:var(--muted)}
+    .actions{display:flex;gap:6px}
+
+    /* Printable styles */
+    @media print{
+      body{margin:0}
+      header,.controls,.toolbar,.actions{display:none}
+      .table-wrap{border:none;padding:0}
+    }
+
+    /* responsive */
+    @media (max-width:640px){body{margin:8px} th, td{padding:6px}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Set-Manager — Tabellen Creator</h1>
+    <div class="small">Bearbeitbar. Spalten &amp; Zeilen anlegen, importieren/exportieren (CSV, JSON, HTML, Excel-kompatibel).</div>
+    <div class="controls">
+      <label class="filebtn">Import Datei <input id="fileImport" class="file-input" type="file" accept=".csv,.json,.html,.htm" /></label>
+      <button id="btnAddRow">+ Zeile</button>
+      <button id="btnAddCol">+ Spalte</button>
+      <button id="btnDelCol">Spalte löschen</button>
+      <button id="btnExportCSV">Export CSV</button>
+      <button id="btnExportJSON">Export JSON</button>
+      <button id="btnExportExcel">Export für Excel</button>
+      <button id="btnExportMD">Export MD</button>
+      <button id="btnPrint">Drucken</button>
+    </div>
+  </header>
+
+  <div class="toolbar small">
+    <div>Hinweis: Doppelklick in Zelle zum Bearbeiten. Größe passt sich automatisch an.</div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="setTable" class="set-table">
+      <thead>
+        <tr id="headRow">
+          <th>Set Nr</th>
+          <th>Set Type</th>
+          <th>Fehlende Teile</th>
+          <th>Wunsch verkaufspreis</th>
+          <th>Verkauft</th>
+          <th>Verkauft für</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Beispielzeile -->
+        <tr>
+          <td contenteditable>001</td>
+          <td contenteditable>Classic</td>
+          <td contenteditable>0</td>
+          <td contenteditable>49.99</td>
+          <td contenteditable>Nein</td>
+          <td contenteditable></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    // Helpers
+    const table = document.getElementById('setTable');
+    const tbody = table.querySelector('tbody');
+    const thead = table.querySelector('thead');
+
+    function createCell(content = '', isHeader = false){
+      const cell = document.createElement(isHeader ? 'th' : 'td');
+      if(!isHeader) cell.contentEditable = 'true';
+      cell.innerText = content;
+      return cell;
+    }
+
+    function addRow(afterIndex = null){
+      const cols = thead.querySelectorAll('th').length;
+      const tr = document.createElement('tr');
+      for(let i=0;i<cols;i++) tr.appendChild(createCell(''));
+      if(afterIndex === null) tbody.appendChild(tr);
+      else tbody.insertBefore(tr, tbody.children[afterIndex+1]);
+      return tr;
+    }
+
+    function addColumn(name = ''){
+      // add header cell
+      const th = createCell(name || 'Neue Spalte', true);
+      thead.querySelector('tr').appendChild(th);
+      // add each body cell
+      Array.from(tbody.rows).forEach(r => r.appendChild(createCell('')));
+    }
+
+    function deleteLastColumn(){
+      const headCells = thead.querySelectorAll('th');
+      if(headCells.length <= 1){ alert('Mindestens 1 Spalte muss bleiben.'); return }
+      headCells[headCells.length-1].remove();
+      Array.from(tbody.rows).forEach(r => { if(r.cells.length) r.deleteCell(r.cells.length-1) });
+    }
+
+    // Exports
+    function exportMD(){
+      // Build Markdown table
+      const headers = Array.from(thead.querySelectorAll('th')).map(h=>h.innerText);
+      const headerLine = '| ' + headers.join(' | ') + ' |';
+      const separator = '| ' + headers.map(()=> '---').join(' | ') + ' |';
+      const rows = Array.from(tbody.rows).map(r=> {
+        return '| ' + Array.from(r.cells).map(c => (c.innerText||'')).join(' | ') + ' |';
+      });
+      const md = [headerLine, separator, ...rows].join('
+');
+      downloadBlob(md, 'text/markdown;charset=utf-8;', 'set-manager.md');
+    }
+    function exportCSV(){
+      const rows = [];
+      const headers = Array.from(thead.querySelectorAll('th')).map(h => h.innerText.replace(/"/g,'""'));
+      rows.push(headers.join(','));
+      Array.from(tbody.rows).forEach(r => {
+        const vals = Array.from(r.cells).map(c => '"'+(c.innerText||'') .replace(/"/g,'""')+'"');
+        rows.push(vals.join(','));
+      });
+      const csv = rows.join('\n');
+      downloadBlob(csv, 'text/csv;charset=utf-8;', 'set-manager.csv');
+    }
+
+    function exportJSON(){
+      const headers = Array.from(thead.querySelectorAll('th')).map(h => h.innerText);
+      const data = Array.from(tbody.rows).map(r => {
+        const obj = {};
+        Array.from(r.cells).forEach((c,i)=> obj[headers[i]||('col'+i)] = c.innerText);
+        return obj;
+      });
+      const json = JSON.stringify({headers, rows: data}, null, 2);
+      downloadBlob(json, 'application/json;charset=utf-8;', 'set-manager.json');
+    }
+
+    // Export for Excel (stabil .xlsx für alle Excel-Versionen)
+    function exportExcel(){
+      const headers = Array.from(thead.querySelectorAll('th')).map(h => h.innerText);
+      const data = [headers];
+      Array.from(tbody.rows).forEach(r =>{
+        data.push(Array.from(r.cells).map(c => c.innerText));
+      });
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Daten');
+      XLSX.writeFile(wb, 'set-manager.xlsx');
+    }(){
+      const html = buildExportHTML();
+      downloadBlob(html, 'application/vnd.ms-excel', 'set-manager.xls');
+    }
+
+    function buildExportHTML(){
+      const styles = `table{border-collapse:collapse;} td,th{border:1px solid #aaa;padding:6px}`;
+      return `<!doctype html><html><head><meta charset="utf-8"><style>${styles}</style></head><body>${table.outerHTML}</body></html>`;
+    }
+
+    function downloadBlob(text, mime, filename){
+      const blob = new Blob([text], {type: mime});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    }
+
+    // Print (open printable window)
+    function openPrintable(){
+      const win = window.open('', '_blank');
+      const styles = `table{border-collapse:collapse;width:100%} td,th{border:1px solid #111;padding:6px}`;
+      win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Druckansicht</title><style>${styles}</style></head><body>${table.outerHTML}</body></html>`);
+      win.document.close();
+      // Give browser time to render then print
+      win.focus();
+      win.print();
+    }
+
+    // Import parsing
+    function parseCSV(text){
+      // simple CSV parser that supports quoted fields
+      const rows = [];
+      const re = /(?:\s*"([^"]*(?:""[^"]*)*)"\s*|([^,]*))(,|$)/g;
+      const lines = text.replace(/\r/g,'').split('\n');
+      for(const line of lines){
+        if(!line.trim()) continue;
+        const row = [];
+        let match; let tmp = line + ','; re.lastIndex = 0;
+        while((match = re.exec(tmp)) !== null){
+          if(match[1] !== undefined) row.push(match[1].replace(/""/g,'"'));
+          else row.push((match[2]||'').trim());
+          if(match[3] === '') break;
+        }
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function importFile(file){
+      const reader = new FileReader();
+      reader.onload = e => {
+        const txt = e.target.result;
+        const name = file.name.toLowerCase();
+        try{
+          if(name.endsWith('.json')){
+            const obj = JSON.parse(txt);
+            if(obj.headers && obj.rows){ loadFromObject(obj.headers, obj.rows); }
+            else if(Array.isArray(obj)){
+              // assume array of objects or arrays
+              if(obj.length && typeof obj[0] === 'object' && !Array.isArray(obj[0])){
+                const headers = Object.keys(obj[0]);
+                loadFromObject(headers, obj);
+              } else {
+                alert('Unbekanntes JSON Format');
+              }
+            }
+          } else if(name.endsWith('.csv')){
+            const rows = parseCSV(txt);
+            if(rows.length){
+              const headers = rows.shift();
+              const data = rows.map(r=>{
+                const o = {};
+                headers.forEach((h,i)=> o[h||'col'+i] = r[i]||'');
+                return o;
+              });
+              loadFromObject(headers, data);
+            }
+          } else if(name.endsWith('.html') || name.endsWith('.htm')){
+            const doc = new DOMParser().parseFromString(txt, 'text/html');
+            const t = doc.querySelector('table');
+            if(!t) { alert('Keine Tabelle in der HTML-Datei gefunden.'); return }
+            // read headers from first row
+            const hdrs = Array.from(t.querySelectorAll('thead th')).map(h=>h.innerText);
+            if(hdrs.length===0){
+              const firstRow = t.querySelector('tr');
+              const firstCells = firstRow ? Array.from(firstRow.children).map(c=>c.innerText) : [];
+              loadFromObject(firstCells, []);
+              // then read body rows skipping first row
+              const rows = Array.from(t.querySelectorAll('tr')).slice(1).map(r=>{
+                const obj = {};
+                Array.from(r.children).forEach((c,i)=> obj[firstCells[i]||'col'+i] = c.innerText);
+                return obj;
+              });
+              if(rows.length) loadFromObject(firstCells, rows);
+            } else {
+              const rows = Array.from(t.querySelectorAll('tbody tr')).map(r=>{
+                const obj = {};
+                Array.from(r.children).forEach((c,i)=> obj[hdrs[i]||'col'+i] = c.innerText);
+                return obj;
+              });
+              loadFromObject(hdrs, rows);
+            }
+          } else {
+            alert('Unbekanntes Dateiformat. Benutze .csv, .json oder .html');
+          }
+        } catch(err){
+          console.error(err); alert('Fehler beim Import: '+err.message);
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function loadFromObject(headers, rows){
+      // headers: array of header names
+      // rows: either array of objects or array of arrays
+      // clear header
+      const headTr = thead.querySelector('tr'); headTr.innerHTML = '';
+      headers.forEach(h => headTr.appendChild(createCell(h, true)));
+      // clear body
+      tbody.innerHTML = '';
+      if(rows && rows.length){
+        if(Array.isArray(rows) && typeof rows[0] === 'object' && !Array.isArray(rows[0])){
+          rows.forEach(obj => {
+            const tr = document.createElement('tr');
+            headers.forEach(h => tr.appendChild(createCell(obj[h]||'')));
+            tbody.appendChild(tr);
+          });
+        } else if(Array.isArray(rows) && Array.isArray(rows[0])){
+          rows.forEach(arr => {
+            const tr = document.createElement('tr');
+            for(let i=0;i<headers.length;i++) tr.appendChild(createCell(arr[i]||''));
+            tbody.appendChild(tr);
+          });
+        }
+      } else {
+        // at least one empty row
+        addRow();
+      }
+    }
+
+    // UI events
+    document.getElementById('btnAddRow').addEventListener('click', ()=> addRow());
+    document.getElementById('btnAddCol').addEventListener('click', ()=>{
+      const name = prompt('Name der neuen Spalte:', 'Neue Spalte');
+      if(name!==null) addColumn(name);
+    });
+    document.getElementById('btnDelCol').addEventListener('click', ()=>{
+      if(confirm('Letzte Spalte wirklich löschen?')) deleteLastColumn();
+    });
+    document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
+    document.getElementById('btnExportJSON').addEventListener('click', exportJSON);
+    document.getElementById('btnExportExcel').addEventListener('click', exportExcel);
+    document.getElementById('btnExportMD').addEventListener('click', exportMD);
+    document.getElementById('btnPrint').addEventListener('click', openPrintable);
+
+    document.getElementById('fileImport').addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return; importFile(f); e.target.value = '';
+    });
+
+    // Allow adding row by pressing Enter in last cell
+    tbody.addEventListener('keydown', (ev) =>{
+      if(ev.key === 'Enter'){
+        ev.preventDefault();
+        const tr = ev.target.closest('tr');
+        if(tr === tbody.lastElementChild) addRow();
+      }
+    });
+
+    // accessibility: let headers be editable on double click
+    thead.addEventListener('dblclick', e => {
+      const th = e.target.closest('th'); if(!th) return;
+      const old = th.innerText;
+      const text = prompt('Spaltenname bearbeiten:', old);
+      if(text !== null) th.innerText = text;
+    });
+
+    // initial auto-size: let browser handle with table-layout:auto
+
+    // Cleanup: ensure table always has at least one row
+    window.addEventListener('beforeunload', ()=>{});
+
+    // End of script
+  </script>
+</body>
+</html>
