@@ -2,33 +2,28 @@
 name: Auto Code Analysis
 
 on:
-  push:             # läuft bei jedem Push
-  pull_request:     # und jedem Pull‑Request
-    # (optional: du kannst hier spezifische Branches definieren oder alle zulassen)  
+  push:
+  pull_request:
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # damit der Workflow committen darf
+      contents: write   # Damit der Workflow zurück committen kann
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          fetch-depth: 0  # vollständige history (empfohlen bei automatischen Commits) :contentReference[oaicite:1]{index=1}
+          fetch-depth: 0
 
-      - name: Install cloc
-        run: sudo apt-get update && sudo apt-get install -y cloc
-
-      - name: Count lines of code
+      - name: Run cloc and output Markdown
         run: |
-          cloc . --exclude-dir=node_modules,assets,dist --quiet --csv --out=code_stats.csv
-        # Ergebnis: CSV‑Datei mit Statistik im Repo‑Root
+          cloc . --exclude-dir=node_modules,assets,dist --quiet --md --report-file=CODE_STATS.md
 
-      - name: Add and commit report
+      - name: Commit CODE_STATS.md if changed
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "auto: update code_stats.csv"
-          branch: ${{ github.ref_name }}  # derselbe Branch wie aktuell :contentReference[oaicite:2]{index=2}
-          file_pattern: "code_stats.csv"
+          commit_message: "auto: update CODE_STATS.md"
+          branch: ${{ github.ref_name }}
+          file_pattern: "CODE_STATS.md"
