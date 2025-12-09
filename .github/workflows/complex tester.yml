@@ -1,5 +1,5 @@
-# .github/workflows/code_analysis.yml
-name: Auto Code Analysis
+# .github/workflows/complex tester.yml
+name: Complex Tester
 
 on:
   push:
@@ -9,13 +9,16 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # Damit der Workflow zurück committen kann
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+
+      - name: Install cloc
+        run: sudo apt-get update && sudo apt-get install -y cloc
 
       - name: Run cloc and output Markdown
         run: |
