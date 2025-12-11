@@ -1,4 +1,4 @@
-cloc|github.com/AlDanial/cloc v 1.98  T=0.02 s (1269.9 files/s, 136537.6 lines/s)
+cloc|github.com/AlDanial/cloc v 1.98  T=0.02 s (1648.3 files/s, 171802.7 lines/s)
 --- | ---
 
 Language|files|blank|comment|code
@@ -9,5 +9,6 @@ JavaScript|3|13|3|80
 JSX|5|9|0|77
 YAML|2|12|1|61
 Markdown|2|9|0|30
+MSBuild script|1|0|0|9
 --------|--------|--------|--------|--------
-SUM:|29|365|45|2708
+SUM:|30|365|45|2717
