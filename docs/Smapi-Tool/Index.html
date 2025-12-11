@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMAPI Studio - Smapifan</title>
+<style>
+body{margin:0;font-family:sans-serif;background:#1e1e1e;color:#eee;}
+#root{display:flex;flex-direction:column;height:100vh;}
+.topbar{background:#b22222;padding:0.5rem;display:flex;justify-content:space-between;align-items:center;color:white;}
+.editor-container{display:flex;flex:1;overflow:hidden;}
+.filetree{width:200px;background:#2e2e2e;overflow:auto;padding:0.5rem;user-select:none;}
+.editor-pane{flex:1;display:flex;flex-direction:column;position:relative;}
+.preview-pane{width:300px;background:#2e2e2e;overflow:auto;padding:0.5rem;}
+.bottom-console{height:120px;background:#1a1a1a;overflow:auto;padding:0.5rem;font-family:monospace;font-size:0.85rem;}
+button{background:#b22222;border:none;color:white;padding:0.4rem 0.8rem;margin-left:0.5rem;cursor:pointer;border-radius:4px;}
+input{background:#3e3e3e;border:none;color:white;padding:0.3rem 0.5rem;border-radius:3px;}
+.file-item{padding:2px 4px;margin:1px;cursor:pointer;}
+.file-item.dragging{opacity:0.5;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.0/dist/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.41.0/min/vs/loader.min.js"></script>
+</head>
+<body>
+<div id="root">
+  <div class="topbar">
+    <span>SMAPI Studio - Smapifan</span>
+    <div>
+      <input id="sourceName" placeholder="Source Ordner" value="SourceCode">
+      <input id="modName" placeholder="Mod Ordner" value="Mod">
+      <button id="exportBtn">Export & Build</button>
+    </div>
+  </div>
+  <div class="editor-container" id="editorContainer">
+    <div class="filetree" id="fileTree">
+      <h4>Dateien:</h4>
+      <ul id="fileList"></ul>
+      <button id="newFileBtn">Neue Datei</button>
+      <button id="newFolderBtn">Neuer Ordner</button>
+    </div>
+    <div class="editor-pane" id="editorPane"></div>
+    <div class="preview-pane" id="previewPane"><p style="padding:1rem">Preview / Pixel / Tiled Map</p></div>
+  </div>
+  <div class="bottom-console" id="console"></div>
+</div>
+
+<script>
+// --- VFS ---
+let vfs = {}; 
+let currentFile = null;
+
+// --- Editor Setup ---
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.41.0/min/vs' }});
+require(['vs/editor/editor.main'], function() {
+  window.editor = monaco.editor.create(document.getElementById("editorPane"), {
+    value: '',
+    language: 'csharp',
+    theme: 'vs-dark',
+    automaticLayout: true
+  });
+});
+
+// --- Elemente ---
+const fileListEl = document.getElementById("fileList");
+const sourceInput = document.getElementById("sourceName");
+const modInput = document.getElementById("modName");
+const exportBtn = document.getElementById("exportBtn");
+const consoleEl = document.getElementById("console");
+const newFileBtn = document.getElementById("newFileBtn");
+const newFolderBtn = document.getElementById("newFolderBtn");
+
+// --- Logging ---
+function log(msg){ consoleEl.innerHTML += msg+"<br>"; consoleEl.scrollTop = consoleEl.scrollHeight; }
+
+// --- Filetree ---
+function updateFileTree(){
+  fileListEl.innerHTML = '';
+  Object.keys(vfs).forEach(path=>{
+    const item = document.createElement("li");
+    item.className='file-item';
+    item.textContent = path;
+    item.setAttribute('draggable','true');
+    item.onclick = ()=>loadFile(path);
+    item.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', path); item.classList.add('dragging'); });
+    item.addEventListener('dragend', e=>{ item.classList.remove('dragging'); });
+    item.addEventListener('drop', e=>{
+      e.preventDefault();
+      const src = e.dataTransfer.getData('text/plain');
+      if(src && src!==path){
+        vfs[path+'_'+Date.now()] = vfs[src];
+        delete vfs[src];
+        updateFileTree();
+      }
+    });
+    item.addEventListener('dragover', e=>e.preventDefault());
+    fileListEl.appendChild(item);
+  });
+}
+
+// --- Datei laden in Editor ---
+function loadFile(path){
+  const f = vfs[path];
+  if(!f) return;
+  if(f.type==='file'){
+    editor.setValue(new TextDecoder().decode(f.content));
+    currentFile=path;
+  }
+}
+
+// --- Neue Datei / Ordner ---
+newFileBtn.onclick = ()=>{
+  const name = prompt("Dateiname:");
+  if(!name) return;
+  vfs[name] = {type:'file', content:new ArrayBuffer(0)};
+  updateFileTree();
+};
+newFolderBtn.onclick = ()=>{
+  const name = prompt("Ordnername:");
+  if(!name) return;
+  vfs[name] = {type:'folder', content:null};
+  updateFileTree();
+};
+
+// --- Drag & Drop Dateien importieren ---
+const container = document.getElementById("editorContainer");
+container.addEventListener("dragover", e => e.preventDefault());
+container.addEventListener("drop", async e => {
+  e.preventDefault();
+  for(const file of e.dataTransfer.files){
+    const arrBuf = await file.arrayBuffer();
+    vfs[file.name] = {type:'file', content:arrBuf};
+  }
+  updateFileTree();
+});
+
+// --- Export & Build ---
+exportBtn.onclick=async()=>{
+  const sourceFolderName = sourceInput.value||"SourceCode";
+  const modFolderName = modInput.value||"Mod";
+
+  if(currentFile) vfs[currentFile].content = new TextEncoder().encode(editor.getValue());
+
+  const payload={};
+  for(const [path,f] of Object.entries(vfs)){
+    if(f.type==='file'){
+      payload[path] = btoa(String.fromCharCode(...new Uint8Array(f.content)));
+    }
+  }
+
+  try{
+    const res = await fetch("https://<DEIN_WISPBYTE_SERVER>/.backend/backend.cs/api/build",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok) throw new Error("Build fehlgeschlagen");
+    const dllBlob = await res.blob();
+
+    const zip = new JSZip();
+    const srcFolder = zip.folder(sourceFolderName);
+    const modFolder = zip.folder(modFolderName);
+    for(const [path,f] of Object.entries(vfs)){
+      if(f.type==='file') srcFolder.file(path,f.content);
+    }
+    modFolder.file("Mod.dll",dllBlob);
+    const blob = await zip.generateAsync({type:"blob"});
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "ModExport.zip";
+    link.click();
+    log("ZIP erstellt & DLL gebaut!");
+  }catch(e){ log("Fehler: "+e.message); }
+};
+
+updateFileTree();
+</script>
+</body>
+</html>
