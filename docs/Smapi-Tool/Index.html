@@ -17,6 +17,7 @@ button{background:#b22222;border:none;color:white;padding:0.4rem 0.8rem;margin-l
 input{background:#3e3e3e;border:none;color:white;padding:0.3rem 0.5rem;border-radius:3px;}
 .file-item{padding:2px 4px;margin:1px;cursor:pointer;}
 .file-item.dragging{opacity:0.5;}
+canvas{border:1px solid #444;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.0/dist/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.41.0/min/vs/loader.min.js"></script>
@@ -39,17 +40,20 @@ input{background:#3e3e3e;border:none;color:white;padding:0.3rem 0.5rem;border-ra
       <button id="newFolderBtn">Neuer Ordner</button>
     </div>
     <div class="editor-pane" id="editorPane"></div>
-    <div class="preview-pane" id="previewPane"><p style="padding:1rem">Preview / Pixel / Tiled Map</p></div>
+    <div class="preview-pane" id="previewPane">
+      <p style="padding:1rem">Pixel / TMX / TBIN / Image Preview</p>
+      <canvas id="pixelCanvas" width="256" height="256"></canvas>
+    </div>
   </div>
   <div class="bottom-console" id="console"></div>
 </div>
 
 <script>
 // --- VFS ---
-let vfs = {}; 
+let vfs = {};
 let currentFile = null;
 
-// --- Editor Setup ---
+// --- Monaco Editor Setup ---
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.41.0/min/vs' }});
 require(['vs/editor/editor.main'], function() {
   window.editor = monaco.editor.create(document.getElementById("editorPane"), {
@@ -68,6 +72,8 @@ const exportBtn = document.getElementById("exportBtn");
 const consoleEl = document.getElementById("console");
 const newFileBtn = document.getElementById("newFileBtn");
 const newFolderBtn = document.getElementById("newFolderBtn");
+const pixelCanvas = document.getElementById("pixelCanvas");
+const ctx = pixelCanvas.getContext("2d");
 
 // --- Logging ---
 function log(msg){ consoleEl.innerHTML += msg+"<br>"; consoleEl.scrollTop = consoleEl.scrollHeight; }
@@ -133,6 +139,15 @@ container.addEventListener("drop", async e => {
   updateFileTree();
 });
 
+// --- Pixel Editor Beispiel ---
+pixelCanvas.addEventListener("click", e=>{
+  const rect = pixelCanvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX-rect.left)/(rect.width/16));
+  const y = Math.floor((e.clientY-rect.top)/(rect.height/16));
+  ctx.fillStyle="#b22222";
+  ctx.fillRect(x*16,y*16,16,16);
+});
+
 // --- Export & Build ---
 exportBtn.onclick=async()=>{
   const sourceFolderName = sourceInput.value||"SourceCode";
@@ -148,7 +163,7 @@ exportBtn.onclick=async()=>{
   }
 
   try{
-    const res = await fetch("https://Werewolf Bot/.backend/backend.cs/api/build",{
+    const res = await fetch("https://werewolf-bot.wispbyte.com/api/build",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify(payload)
