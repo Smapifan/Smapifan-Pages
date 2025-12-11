@@ -163,7 +163,7 @@ exportBtn.onclick=async()=>{
   }
 
   try{
-    const res = await fetch("https://werewolf-bot.wispbyte.com/api/build",{
+    const res = await fetch("https://<dein-vercel-backend>.vercel.app/api/build",{
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body: JSON.stringify(payload)
