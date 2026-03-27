@@ -1,0 +1,17 @@
+{
+  "Type": "science",
+  "Title": "i18n/science778/title",
+  "Questions": [
+    {
+      "ID": "q1",
+      "Question": "i18n/science778/q1_question",
+      "Answers": {
+        "a": "i18n/science778/q1_a",
+        "b": "i18n/science778/q1_b",
+        "c": "i18n/science778/q1_c",
+        "d": "i18n/science778/q1_d"
+      },
+      "Right_Answer": "c"
+    }
+  ]
+}

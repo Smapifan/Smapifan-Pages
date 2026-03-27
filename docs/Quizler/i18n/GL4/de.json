@@ -1,0 +1,35 @@
+{
+  "title": "Präsentationsquiz",
+  
+  "q1_question": "Wo befindet sich das Hochofenwerk?",
+  "q1_a": "Dortmund-Hörde",
+  "q1_b": "Siegen",
+  "q1_c": "Lüdenscheid",
+  "q1_d": "Köln",
+  
+  "q2_question": "Was ist das Hochofenwerk heute?",
+  "q2_a": "Abenteuerpark",
+  "q2_b": "Unter Wasser",
+  "q2_c": "Erlebnisort",
+  "q2_d": "Wald",
+  
+  "q3_question": "Warum Phoenix?",
+  "q3_a": "Wiedergeburt",
+  "q3_b": "Neuanfang",
+  "q3_c": "Auferstehung",
+  "q3_d": "Das Ende",
+  
+  "q4_question": "Was wurde mit dem Gelände gemacht?",
+  "q4_a": "abgerissen",
+  "q4_b": "Nichts",
+  "q4_c": "neu gestaltet",
+  
+  "q5_question": "Wie viele Hochöfen gab es und wie hoch waren sie?",
+  "q5_a": "Zwei und 100 Meter",
+  "q5_b": "Einer und 200 Meter",
+  "q5_c": "Vier und 50 Meter",
+  "q5_d": "Zwei und 120 Meter",
+  "q5_e": "Zwei und 200 Meter",
+  "q5_f": "Einer und 400 Meter",
+  "q5_g": "Ein halber und 20 Meter"
+}

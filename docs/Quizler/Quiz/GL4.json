@@ -1,0 +1,64 @@
+{
+  "Type": "science",
+  "Title": "i18n/GL4/title",
+  "Questions": [
+    {
+      "ID": "q1",
+      "Question": "i18n/GL4/q1_question",
+      "Answers": {
+        "a": "i18n/GL4/q1_a",
+        "b": "i18n/GL4/q1_b",
+        "c": "i18n/GL4/q1_c",
+        "d": "i18n/GL4/q1_d"
+      },
+      "Right_Answer": "a"
+    },
+    {
+      "ID": "q2",
+      "Question": "i18n/GL4/q2_question",
+      "Answers": {
+        "a": "i18n/GL4/q2_a",
+        "b": "i18n/GL4/q2_b",
+        "c": "i18n/GL4/q2_c",
+        "d": "i18n/GL4/q2c_d"
+      },
+      "Right_Answer": "d"
+    },
+     {
+      "ID": "q3",
+      "Question": "i18n/GL4/q3_question",
+      "Answers": {
+        "a": "i18n/GL4/q3_a",
+        "b": "i18n/GL4/q3_b",
+        "c": "i18n/GL4/q3_c",
+        "d": "i18n/GL4/q3c_d"
+      },
+      "Right_Answer": "b"
+    },
+    {
+      "ID": "q4",
+      "Question": "i18n/GL4/q4_question",
+      "Answers": {
+        "a": "i18n/GL4/q4_a",
+        "b": "i18n/GL4/q4_b",
+        "c": "i18n/GL4/q4_c",
+      },
+      "Right_Answer": "c"
+    },
+    {
+      "ID": "q5",
+      "Question": "i18n/GL4/q5_question",
+      "Answers": {
+        "a": "i18n/GL4/q5_a",
+        "b": "i18n/GL4/q5_b",
+        "c": "i18n/GL4/q5_c",
+        "d": "i18n/GL4/q5c_d",
+        "e": "i18n/GL4/q5c_e",
+        "f": "i18n/GL4/q5c_f",
+        "g": "i18n/GL4/q5c_g",
+      },
+      "Right_Answer": "a"
+    }
+  ]
+}
+

@@ -1,0 +1,35 @@
+{
+  "title": "Presentation Quiz",
+  
+  "q1_question": "Where is the blast furnace plant located?",
+  "q1_a": "Dortmund-Hörde",
+  "q1_b": "Siegen",
+  "q1_c": "Lüdenscheid",
+  "q1_d": "Köln",
+  
+  "q2_question": "What is the blast furnace plant today?",
+  "q2_a": "Adventure park",
+  "q2_b": "Under the Water",
+  "q2_c": "Experience place",
+  "q2_d": "Forest",
+  
+  "q3_question": "Why Phoenix?",
+  "q3_a": "rebirth",
+  "q3_b": "New beginning",
+  "q3_c": "resurrection",
+  "q3_d": "the end",
+  
+  "q4_question": "What was done with the site?",
+  "q4_a": "demolished",
+  "q4_b": "Nothing",
+  "q4_c": "redesigned",
+  
+  "q5_question": "How many blast furnaces were there and how tall were they?",
+  "q5_a": "Two and 100 Meters",
+  "q5_b": "One and 200 Meters",
+  "q5_c": "Four and 50 Meters",
+  "q5_d": "Two and 120 Meters",
+  "q5_e": "Two and 200 Meters",
+  "q5_f": "One and 400 Meters",
+  "q5_g": " A Half and 20 Meters"
+}

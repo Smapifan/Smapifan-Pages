@@ -1,0 +1,28 @@
+{
+  "Type": "math",
+  "Title": "i18n/math2445/title",
+  "Questions": [
+    {
+      "ID": "q1",
+      "Question": "i18n/math2445/q1_question",
+      "Answers": {
+        "a": "i18n/math2445/q1_a",
+        "b": "i18n/math2445/q1_b",
+        "c": "i18n/math2445/q1_c",
+        "d": "i18n/math2445/q1_d"
+      },
+      "Right_Answer": "a"
+    },
+    {
+      "ID": "q2",
+      "Question": "i18n/math2445/q2_question",
+      "Answers": {
+        "a": "i18n/math2445/q2_a",
+        "b": "i18n/math2445/q2_b",
+        "c": "i18n/math2445/q2_c",
+        "d": "i18n/math2445/q2_d"
+      },
+      "Right_Answer": "b"
+    }
+  ]
+}

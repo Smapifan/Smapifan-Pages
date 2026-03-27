@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quiz App</title>
+<style>
+body { font-family: sans-serif; max-width: 900px; margin: auto; padding: 20px; }
+#search { float: right; margin-bottom: 20px; }
+.subject, .quiz { margin: 8px 0; padding: 10px; border-radius: 6px; cursor: pointer; border: 1px solid #ccc; }
+.subject:hover, .quiz:hover { background-color: #f0f0f0; }
+.question { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+.answers { margin-top: 10px; }
+.answer { display: block; margin: 5px 0; }
+.correct { background-color: #d4edda; }
+.wrong { background-color: #f8d7da; }
+button { padding: 10px 15px; font-size: 16px; cursor: pointer; margin-top: 15px; }
+</style>
+</head>
+<body>
+
+<h1>Quiz App</h1>
+<input type="text" id="search" placeholder="Search Subjects...">
+<div id="subjects_list"></div>
+<div id="quiz_list"></div>
+<div id="quiz_container"></div>
+
+<script>
+const userLang = navigator.language.slice(0,2) || 'en';
+let subjectsData = {};
+let i18nSubjects = {};
+
+// 1️⃣ Subjects laden
+async function loadSubjects() {
+  subjectsData = await fetch('subjects.json').then(r=>r.json());
+  try { i18nSubjects = await fetch(`i18n/subjects/${userLang}.json`).then(r=>r.json()); }
+  catch(e) { i18nSubjects = await fetch(`i18n/subjects/en.json`).then(r=>r.json()); }
+
+  const container = document.getElementById('subjects_list');
+  container.innerHTML = '';
+
+  Object.keys(subjectsData).forEach(subjectKey=>{
+    const div = document.createElement('div');
+    div.className = 'subject';
+    div.textContent = i18nSubjects[subjectKey] || subjectKey;
+    div.onclick = ()=>showQuizzes(subjectKey);
+    container.appendChild(div);
+  });
+
+  // Prüfe Hash beim Laden
+  if(window.location.hash){
+    const hashQuizID = window.location.hash.substring(1);
+    startQuiz(hashQuizID, true);
+  }
+}
+
+// Suche
+document.getElementById('search').addEventListener('input', e=>{
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('.subject').forEach(div=>{
+    div.style.display = div.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+// 2️⃣ Quizzes eines Subjects anzeigen
+async function showQuizzes(subjectKey){
+  const quizContainerDiv = document.getElementById('quiz_container');
+  quizContainerDiv.innerHTML = '';
+  const quizListDiv = document.getElementById('quiz_list');
+  quizListDiv.innerHTML = '<h2>Quizzes</h2>';
+
+  const quizFiles = await fetch('Quiz/quiz_list.json').then(r=>r.json());
+  for(const file of quizFiles){
+    const quizID = file.replace('.json','');
+    const quizData = await fetch(`Quiz/${file}`).then(r=>r.json());
+    if(quizData.Type === subjectKey){
+      let i18nData;
+      try { i18nData = await fetch(`i18n/${quizID}/${userLang}.json`).then(r=>r.json()); }
+      catch(e) { i18nData = await fetch(`i18n/${quizID}/en.json`).then(r=>r.json()); }
+
+      const titleKey = quizData.Title.split('/').pop();
+      const div = document.createElement('div');
+      div.className = 'quiz';
+      div.textContent = i18nData[titleKey] || quizID;
+      div.onclick = ()=>startQuiz(quizID, false);
+      quizListDiv.appendChild(div);
+    }
+  }
+  quizListDiv.scrollIntoView({behavior:'smooth'});
+}
+
+// 3️⃣ Quiz starten
+async function startQuiz(quizID, fromHash=false){
+  window.location.hash = quizID;
+
+  // Alles außer Quiz ausblenden
+  document.getElementById('subjects_list').style.display = 'none';
+  document.getElementById('quiz_list').style.display = 'none';
+
+  const quizDiv = document.getElementById('quiz_container');
+  quizDiv.innerHTML = '';
+
+  const quizData = await fetch(`Quiz/${quizID}.json`).then(r=>r.json());
+  let i18nData;
+  try { i18nData = await fetch(`i18n/${quizID}/${userLang}.json`).then(r=>r.json()); }
+  catch(e) { i18nData = await fetch(`i18n/${quizID}/en.json`).then(r=>r.json()); }
+
+  const titleKey = quizData.Title.split('/').pop();
+  const titleH1 = document.createElement('h1');
+  titleH1.textContent = i18nData[titleKey] || quizID;
+  quizDiv.appendChild(titleH1);
+
+  const answersMap = {}; 
+
+  quizData.Questions.forEach(q=>{
+    const qDiv = document.createElement('div');
+    qDiv.className = 'question';
+    qDiv.id = q.ID;
+
+    const qTextKey = q.Question.split('/').pop();
+    const qText = i18nData[qTextKey] || q.Question;
+    const qHeader = document.createElement('h3');
+    qHeader.textContent = qText;
+    qDiv.appendChild(qHeader);
+
+    const answersDiv = document.createElement('div');
+    answersDiv.className = 'answers';
+
+    Object.entries(q.Answers).forEach(([key,val])=>{
+      const answerKey = val.split('/').pop();
+      const answerText = i18nData[answerKey] || val;
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = q.ID;
+      radio.value = key;
+
+      radio.onchange = ()=>answersMap[q.ID]=key;
+
+      const label = document.createElement('label');
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode(' '+answerText));
+      label.className = 'answer';
+      answersDiv.appendChild(label);
+    });
+
+    qDiv.appendChild(answersDiv);
+    quizDiv.appendChild(qDiv);
+  });
+
+  const checkBtn = document.createElement('button');
+  checkBtn.textContent = 'Check Answers';
+  checkBtn.onclick = ()=>checkQuiz(quizData, answersMap, i18nData);
+  quizDiv.appendChild(checkBtn);
+}
+
+// 4️⃣ Quiz auswerten + Read-Only
+function checkQuiz(quizData, answersMap, i18nData){
+  quizData.Questions.forEach(q=>{
+    const qDiv = document.getElementById(q.ID);
+    Array.from(qDiv.querySelectorAll('.answer')).forEach(label=>{
+      const input = label.querySelector('input');
+      if(!input) return;
+      input.disabled = true; // read-only
+      label.classList.remove('correct','wrong');
+      if(q.Right_Answer === input.value){
+        label.classList.add('correct');
+      }
+      if(answersMap[q.ID] && answersMap[q.ID]===input.value && answersMap[q.ID]!==q.Right_Answer){
+        label.classList.add('wrong');
+      }
+    });
+  });
+  alert('Quiz checked! The quiz is now read-only.');
+}
+
+loadSubjects();
+</script>
+
+</body>
+</html>
