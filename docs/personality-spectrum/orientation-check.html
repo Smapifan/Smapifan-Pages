@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>Personality Spectrum — Orientation Check</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #101014 0%, #17171d 50%, #101014 100%);
+            --card-bg: rgba(27, 27, 34, 0.96);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f1f6;
+            --text-muted: #a19da9;
+            --accent-primary: #ef4444;
+            --accent-hover: #f87171;
+            --accent-success: #10b981;
+            --btn-bg: rgba(255, 255, 255, 0.05);
+            --btn-hover: rgba(239, 68, 68, 0.15);
+            --btn-border: rgba(255, 255, 255, 0.12);
+            --fluid-padding: clamp(1.5rem, 5vw, 2.5rem);
+            --fluid-radius: clamp(12px, 2vw, 24px);
+            --font-title: clamp(1.5rem, 4vw, 2.2rem);
+            --font-body: clamp(0.95rem, 2vw, 1.1rem);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        .container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            padding: var(--fluid-padding);
+            border-radius: var(--fluid-radius);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            max-width: 650px;
+            width: 100%;
+        }
+        h1 {
+            font-size: var(--font-title);
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #f87171 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: calc(var(--font-body) * 0.85);
+            margin-bottom: 2rem;
+        }
+        .progress-wrapper {
+            height: 6px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 2.5rem;
+            border-radius: 100px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-primary) 0%, #991b1b 100%);
+            border-radius: 100px;
+            transition: width 0.3s ease;
+        }
+        .question-box {
+            font-size: var(--font-body);
+            font-weight: 600;
+            margin-bottom: 2rem;
+            color: #ffffff;
+            min-height: 60px;
+            white-space: pre-line;
+        }
+        .options-wrapper { display: flex; flex-direction: column; gap: 1rem; }
+        .interactive-btn {
+            background: var(--btn-bg);
+            color: var(--text-main);
+            border: 1px solid var(--btn-border);
+            padding: clamp(1rem, 3vw, 1.3rem) clamp(1.2rem, 4vw, 1.8rem);
+            border-radius: calc(var(--fluid-radius) * 0.7);
+            cursor: pointer;
+            font-size: calc(var(--font-body) * 0.95);
+            font-weight: 500;
+            text-align: left;
+            line-height: 1.4;
+            transition: all 0.2s ease;
+        }
+        .interactive-btn:hover {
+            background: var(--btn-hover);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        .view-hidden { display: none !important; }
+        .result-badge {
+            color: var(--accent-success);
+            font-size: calc(var(--font-title) * 1.1);
+            font-weight: 800;
+            margin: 1.5rem 0;
+        }
+        .result-card {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.24);
+            padding: 1.5rem;
+            border-radius: calc(var(--fluid-radius) * 0.7);
+            border-left: 4px solid var(--accent-primary);
+            margin-bottom: 2rem;
+            font-size: calc(var(--font-body) * 0.95);
+            color: #d1cbd8;
+        }
+        .action-trigger-btn {
+            background: var(--accent-primary);
+            color: #ffffff;
+            font-weight: 700;
+            text-align: center;
+            border: none;
+            width: 100%;
+            padding: 1rem;
+            border-radius: calc(var(--fluid-radius) * 0.7);
+            font-size: var(--font-body);
+            cursor: pointer;
+        }
+        .action-trigger-btn:hover { background: var(--accent-hover); }
+    </style>
+</head>
+<body>
+
+<main class="container">
+    <!-- QUIZ BERICH -->
+    <section id="quiz-view">
+        <header>
+            <h1 id="ui-title">Orientierungs-Check</h1>
+            <p id="ui-subtitle" class="subtitle">Antworte ehrlich für ein mathematisch präzises Ergebnis.</p>
+        </header>
+        <div class="progress-wrapper">
+            <div id="ui-progress" class="progress-bar-fill"></div>
+        </div>
+        <article>
+            <div id="ui-question" class="question-box"></div>
+            <div id="ui-options" class="options-wrapper"></div>
+        </article>
+    </section>
+
+    <!-- ERGEBNIS BEREICH -->
+    <section id="result-view" class="view-hidden">
+        <header>
+            <h1>Dein Ergebnis</h1>
+        </header>
+        <div id="ui-result-badge" class="result-badge"></div>
+        <p id="ui-result-desc" class="result-card"></p>
+        <button class="action-trigger-btn" id="ui-restart">Test wiederholen</button>
+    </section>
+</main>
+
+<script>
+    // --- 42 FRAGEN DATENSATZ & LOGISCHE GEWICHTUNG ---
+    const dataset = {
+        questions: [
+            { t: "Ein Creator postet ästhetische Bilder. Was fesselt deinen Blick?", o: [{ x: "Die weibliche Ausstrahlung von Frauen.", s: { h: 2, b: 0, p: 0 } }, { x: "Die Mischung – mich sprechen maskuline und feminine Züge an.", s: { h: 0, b: 2, p: 1 } }, { x: "Der einzigartige Vibe und Style, ungeachtet des Geschlechts.", s: { h: 0, b: 0, p: 2 } }] },
+            { t: "Auf einer Dating-App stolperst du über ein Profil. Wonach filterst du?", o: [{ x: "Ich suche ausschließlich nach Mädchen.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich habe Männer und Frauen aktiv eingestellt.", s: { h: 0, b: 2, p: 0 } }, { x: "Die Interessen entscheiden – das Geschlecht ist mir erst mal egal.", s: { h: 0, b: 1, p: 2 } }] },
+            { t: "Welcher Typ Promi landet am ehesten in deiner 'Crush'-Kategorie?", o: [{ x: "Immer Frauen mit starker, femininer Anziehungskraft.", s: { h: 2, b: 0, p: 0 } }, { x: "Es wechselt komplett – mal ein attraktiver Typ, mal eine hübsche Frau.", s: { h: 0, b: 2, p: 0 } }, { x: "Menschen mit einer absolut fesselnden Persönlichkeit.", s: { h: 0, b: 0, p: 2 } }] },
+            { t: "Du siehst ein Tanzvideo. Welche Dynamik zieht dich optisch mehr an?", o: [{ x: "Die eleganten, weiblichen Bewegungen von Tänzerinnen.", s: { h: 2, b: 0, p: 0 } }, { x: "Sowohl maskuline Kraft als auch feminine Ästhetik faszinieren mich.", s: { h: 0, b: 2, p: 1 } }, { x: "Die Energie und der emotionale Ausdruck des Menschen an sich.", s: { h: 0, b: 0, p: 2 } }] },
+            { t: "Dein Social-Media-Feed zeigt Models. Wer erregt dein Interesse?", o: [{ x: "Mein Blick bleibt fast ausschließlich bei Frauen hängen.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich schaue mir gerne schöne Männer als auch schöne Frauen an.", s: { h: 0, b: 2, p: 0 } }, { x: "Ich achte primär auf Gesichter, Augen und Ausstrahlung.", s: { h: 0, b: 1, p: 2 } }] },
+            { t: "Ein Creator wechselt radikal seinen Kleidungsstil. Wie reagierst du?", o: [{ x: "Wenn die Person kein Mädchen mehr ist oder so wirkt, schwindet mein Interesse.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich finde das Spiel mit männlichen und weiblichen Reizen spannend.", s: { h: 0, b: 2, p: 1 } }, { x: "Wenn ich den Charakter mag, hat das Experimentieren keinen Einfluss.", s: { h: 0, b: 0, p: 2 } }] },
+            { t: "Was ist für dich das schönste Szenario für ein erstes Kennenlernen?", o: [{ x: "Ein klassisches Date mit einem sympathischen Mädchen.", s: { h: 2, b: 0, p: 0 } }, { x: "Völlig offen, ob es ein Treffen mit einem Jungen oder Mädchen ist.", s: { h: 0, b: 2, p: 0 } }, { x: "Ein tiefes Gespräch, bei dem man das Geschlecht komplett vergisst.", s: { h: 0, b: 0, p: 2 } }] },
+            { t: "Wenn du dir eine Partnerschaft in 5 Jahren vorstellst, wen siehst du?", o: [{ x: "Definitiv eine feste Freundin.", s: { h: 2, b: 0, p: 0 } }, { x: "Das kann ein fester Freund oder eine Freundin sein.", s: { h: 0, b: 2, p: 0 } }, { x: "Einfach meine absolute Lieblingsperson – das Geschlecht spielt keine Rolle.", s: { h: 0, b: 0, p: 2 } }] },
+            { t: "Wie wichtig ist dir das traditionelle Konzept von 'Mann und Frau'?", o: [{ x: "Sehr wichtig, ich brauche diese klassische weibliche Gegenkomponente.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich mag das Konzept, kann mir aber genausogut anderes vorstellen.", s: { h: 0, b: 2, p: 1 } }, { x: "Überhaupt nicht wichtig. Für mich verschmelzen zwei Persönlichkeiten.", s: { h: 0, b: 0, p: 2 } }] },
+            { t: "Du hast heftige Schmetterlinge im Bauch. Was hat das ausgelöst?", o: [{ x: "Das Lächeln und die charmante Art eines tollen Mädchens.", s: { h: 2, b: 0, p: 0 } }, { x: "Je nach Phase: Mal fasziniert mich ein Typ, mal ein Mädchen.", s: { h: 0, b: 2, p: 0 } }, { x: "Ein tiefes Gespräch, bei dem die Chemie perfekt gestimmt hat.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Jemand gesteht dir anonym seine Liebe. Was müsste zutreffen?", o: [{ x: "Es muss sich herausstellen, dass die Nachricht von einem Mädchen kommt.", s: { h: 2, b: 0, p: 0 } }, { x: "Es könnte von jedem Geschlecht stammen, solange wir uns verstehen.", s: { h: 0, b: 2, p: 1 } }, { x: "Die Tiefe der Worte muss mich berühren, das Geschlecht ist egal.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wie stehst du zu Händchenhalten in der Öffentlichkeit?", o: [{ x: "Gerne, aber nur ganz klassisch mit meiner Freundin.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich würde das sowohl mit einem Freund als auch mit einer Freundin machen.", s: { h: 0, b: 2, p: 1 } }, { x: "Ich halte die Hand des Menschen, den ich liebe – unabhängig vom Geschlecht.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Du schaust ein romantisches Anime. Welche Lovestory packt dich?", o: [{ x: "Die klassische Boy-meets-Girl-Geschichte.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich mag Vielfalt, auch queere Lovestories (BL/GL) catchen mich.", s: { h: 0, b: 2, p: 1 } }, { x: "Stories, in denen die Charaktere seelenverwandt sind, egal in welchen Körpern.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wenn du emotionale Musik hörst – an welches Geschlecht denkst du?", o: [{ x: "Ich stelle mir in meinen Tagträumen immer ein Mädchen vor.", s: { h: 2, b: 0, p: 0 } }, { x: "Je nach Stimmung stelle ich mir mal einen Jungen oder ein Mädchen vor.", s: { h: 0, b: 2, p: 0 } }, { x: "Ich denke an ein Gefühl, das Geschlecht ist dabei vollkommen fließend.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "In Games kannst du Romanzen eingehen. Wen wählst du aus?", o: [{ x: "Ich skippe alle männlichen Routen und wähle nur weibliche Charaktere.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich probiere in verschiedenen Durchgängen beide Optionen aus.", s: { h: 0, b: 2, p: 1 } }, { x: "Ich wähle den Charakter mit der tiefgründigsten Storyline.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Ein Kunstwerk feiert die pure Schönheit des Körpers. Was fühlst du?", o: [{ x: "Ich empfinde primär die weibliche Anatomie als anziehend.", s: { h: 2, b: 0, p: 0 } }, { x: "Sowohl die männliche als auch die weibliche Ästhetik reizen mich.", s: { h: 0, b: 2, p: 0 } }, { x: "Der Körper ist Kunst. Die echte Anziehung entsteht bei mir erst durch den Geist.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Welcher Beziehungs-Vibe in Serien beschreibt deinen Wunschzustand?", o: [{ x: "Die klassische Beziehung zwischen einem Jungen und einem Mädchen.", s: { h: 2, b: 0, p: 0 } }, { x: "Ein Paar, bei dem beide bisexuell sind und einander perfekt verstehen.", s: { h: 0, b: 2, p: 1 } }, { x: "Zwei beste Freunde, deren Seelenbindung das Geschlecht irrelevant macht.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wenn du LGBTQ+-Inhalte siehst, wie ordnest du dich ein?", o: [{ x: "Ich sehe mich als Unterstützer (Ally), da ich komplett hetero bin.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich fühle mich der Bi-Community nah, da ich mehr als ein Geschlecht mag.", s: { h: 0, b: 2, p: 0 } }, { x: "Ich fühle mich im Bereich Pan/Queer zu Hause, Liebe ist für mich grenzenlos.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Auf einer Party sucht jemand Blickkontakt. Wer bringt dein Herz zum Rasen?", o: [{ x: "Ein hübsches Mädchen, das mir zulächelt.", s: { h: 2, b: 0, p: 0 } }, { x: "Ein attraktiver Typ oder ein süßes Mädchen – beide machen mich nervös.", s: { h: 0, b: 2, p: 0 } }, { x: "Die Person, die eine unbeschreiblich faszinierende Ausstrahlung hat.", s: { h: 0, b: 1, p: 2 } }] },
+{ t: "Ein Kumpel macht aus Spaß eine Anspielung aufs Knutschen. Wie reagierst du?", o: [{ x: "Absolut nichts für mich, ich stehe rein auf Mädchen.", s: { h: 2, b: 0, p: 0 } }, { x: "Ein bisschen Neugierde ist insgeheim da, auch wenn es ein Witz war.", s: { h: 0, b: 2, p: 1 } }, { x: "Bei einer emotionalen Connection wäre mir das Geschlecht egal.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Beim Tanzen berührt dich jemand an der Hüfte. Bei wem lässt du es zu?", o: [{ x: "Nur, wenn ich sofort merke, dass es ein Mädchen ist.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich bin offen und schaue, ob mir die Person (Junge/Mädchen) gefällt.", s: { h: 0, b: 2, p: 0 } }, { x: "Wenn die Sympathie vorher stimmte, ist das Geschlecht zweitrangig.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Was ist für dich der absolute 'Turn-on' bei einem Kompliment?", o: [{ x: "Wenn ein Mädchen meine Ausstrahlung oder mein Aussehen lobt.", s: { h: 2, b: 0, p: 0 } }, { x: "Dass das Kompliment von einer Person kommt, die ich attraktiv finde.", s: { h: 0, b: 2, p: 0 } }, { x: "Wenn jemand bemerkt, wie meine Seele tickt und meinen Charakter lobt.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Du bist feierwütig und wirst anhänglich. Zu wem suchst du Kuschelnähe?", o: [{ x: "Ausschließlich zu Mädchen.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich kann da bei Kumpels als auch bei Mädels nähebedürftig werden.", s: { h: 0, b: 2, p: 1 } }, { x: "Zu der Person, bei der ich mich emotional am sichersten fühle.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wenn dir jemand einen Drink spendiert, wer darf es sein?", o: [{ x: "Ein süßes Mädel, mit dem ich danach flirten kann.", s: { h: 2, b: 0, p: 0 } }, { x: "Jeder, den ich sympathisch finde – egal ob Mann oder Frau.", s: { h: 0, b: 2, p: 0 } }, { x: "Hauptsache eine tolle Unterhaltung entsteht, das Geschlecht ist egal.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wie nimmst du das Geschlecht eines Menschen im Alltag wahr?", o: [{ x: "Als fundamentale Eigenschaft für meine Partnerwahl.", s: { h: 2, b: 0, p: 0 } }, { x: "Als wichtiges Merkmal – ich mag männliche und weibliche Züge.", s: { h: 0, b: 2, p: 0 } }, { x: "Als biologisches Detail. Für meine Gefühle ist es irrelevant.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Könntest du dich in eine non-binäre Person verlieben?", o: [{ x: "Nein, ich brauche ein klares, biologisches Mädchen.", s: { h: 2, b: 0, p: 0 } }, { x: "Schwer zu sagen, mein Fokus liegt eher auf Jungs und Mädels.", s: { h: 0, b: 1, p: 1 } }, { x: "Absolut ja. Ich liebe die Persönlichkeit, der Rest schränkt mich nicht ein.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Welcher Gedanke beschreibt deine Sicht auf Anziehung am besten?", o: [{ x: "Ich stehe klassisch auf das andere Geschlecht – so ticke ich.", s: { h: 2, b: 0, p: 0 } }, { x: "Das Spektrum ist groß, und ich passe gut in die Mitte (Bi).", s: { h: 0, b: 2, p: 0 } }, { x: "Anziehung ist rein mentale Resonanz. Körper sind sekundär.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Was bricht bei dir ein potenzielles Interesse sofort (Dealbreaker)?", o: [{ x: "Wenn die Person kein biologisches Mädchen ist.", s: { h: 2, b: 0, p: 0 } }, { x: "Wenn die Person optisch nicht in mein Raster passt.", s: { h: 0, b: 2, p: 0 } }, { x: "Wenn die Person einen schlechten Charakter hat – alles andere ist verhandelbar.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wenn du die Augen schließt und an 'Liebe' denkst, wie sieht sie aus?", o: [{ x: "Zwei klar definierte Gegenpole, die perfekt ineinandergreifen.", s: { h: 2, b: 0, p: 0 } }, { x: "Ein buntes Spektrum, das sich in verschiedene Richtungen ausbreitet.", s: { h: 0, b: 2, p: 1 } }, { x: "Ein fließender Ozean ohne feste Ufer oder Grenzen.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wie reagiert dein inneres Gefühl auf das Wort 'geschlechtsblind'?", o: [{ x: "Das trifft auf mich nicht zu, ich nehme das Geschlecht sehr aktiv wahr.", s: { h: 2, b: 0, p: 0 } }, { x: "Ein interessantes Konzept, aber ich unterscheide schon noch.", s: { h: 0, b: 2, p: 0 } }, { x: "Genau so fühle ich. Ich blende das Geschlecht bei Sympathie einfach aus.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Beim Gedanken an Küssen und Kuscheln: Wer löst Vorfreude aus?", o: [{ x: "Die weiche Haut und der Duft eines Mädchens.", s: { h: 2, b: 0, p: 0 } }, { x: "Sowohl die Vorstellung mit einem Jungen als auch mit einem Mädchen reizt mich.", s: { h: 0, b: 2, p: 0 } }, { x: "Der Mensch, zu dem ich das tiefste Vertrauen aufgebaut habe.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Ein tolles Parfüm zieht dich an. Welcher Duft flutet deine Sinne?", o: [{ x: "Süße, feminine Frauenparfüms.", s: { h: 2, b: 0, p: 0 } }, { x: "Sowohl herbe Männerdüfte als auch blumige Frauendüfte können mich flashen.", s: { h: 0, b: 2, p: 1 } }, { x: "Der natürliche Eigengeruch der Person – die Marke ist egal.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Blind Date im Dunkeln: Du verliebst dich in eine Stimme. Das Licht geht an – wer sitzt da?", o: [{ x: "Es muss ein Mädchen sein, sonst wäre die Romantik sofort vorbei.", s: { h: 2, b: 0, p: 0 } }, { x: "Egal ob ein hübscher Typ oder ein süßes Mädel, ich bin offen.", s: { h: 0, b: 2, p: 0 } }, { x: "Völlig egal – die Stimme hat mich erobert, der Körper ist sekundär.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wie stehst du zu rein körperlicher Anziehung ohne Gefühle?", o: [{ x: "Das empfinde ich ausschließlich gegenüber dem weiblichen Geschlecht.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich kann mir das theoretisch mit Männern und Frauen vorstellen.", s: { h: 0, b: 2, p: 0 } }, { x: "Bei mir entsteht Lust fast immer erst durch mentale Anziehung.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Welcher Aspekt von körperlicher Nähe gibt dir die meiste Energie?", o: [{ x: "Das Gefühl, ein Mädchen zu beschützen oder von ihr gehalten zu werden.", s: { h: 2, b: 0, p: 0 } }, { x: "Die Abwechslung – die unterschiedliche Dynamik mit Männern und Frauen.", s: { h: 0, b: 2, p: 1 } }, { x: "Die pure Geborgenheit und das Verschmelzen mit meiner Lieblingsperson.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wenn du einen erotischen Traum hast, wer spielt darin die Hauptrolle?", o: [{ x: "Ausnahmslos Frauen.", s: { h: 2, b: 0, p: 0 } }, { x: "Das variiert – mal sind es Männer, mal Frauen, mal beide.", s: { h: 0, b: 2, p: 0 } }, { x: "Es geht um Gefühle und Berührungen – die Geschlechter sind oft verschwommen.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wenn du ein Label für deine Sexualität wählst, wie sicher bist du?", o: [{ x: "Ganz klar hetero, da gibt es für mich gar nichts zu rütteln.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich mag 'Bisexuell', weil es mir die Freiheit für beide Welten lässt.", s: { h: 0, b: 2, p: 0 } }, { x: "Ich liebe einfach den Menschen, 'Pan' beschreibt das am besten.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "'Könntest du dir jemals was mit einem Typen vorstellen?' Deine intuitive Antwort?", o: [{ x: "'Nein, auf gar keinen Fall, ich stehe nur auf Frauen.'", s: { h: 2, b: 0, p: 0 } }, { x: "'Vielleicht, sag niemals nie, ich halte mir alle Türen offen.'", s: { h: 0, b: 2, p: 1 } }, { x: "'Wenn der perfekte Charakter kommt, ist mir das Geschlecht egal.'", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Was bedeutet der Begriff 'Seelenverwandtschaft' für dich?", o: [{ x: "Ein wunderschönes Gefühl, das ich mit meiner Traumfrau teilen möchte.", s: { h: 2, b: 0, p: 0 } }, { x: "Die höchste Stufe der Liebe, unabhängig vom Geschlecht des Partners.", s: { h: 0, b: 1, p: 1 } }, { x: "Das Fundament. Wenn die Seelen matchen, löst sich das Geschlecht auf.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Dein Traum-Mensch entpuppt sich als trans. Wie reagiert dein Herz?", o: [{ x: "Das ist für mich leider ein Ausschlusskriterium.", s: { h: 2, b: 0, p: 0 } }, { x: "Ich müsste mich erst an den Gedanken gewöhnen, schließe es aber nicht aus.", s: { h: 0, b: 1, p: 1 } }, { x: "Es ändert absolut nichts – der Mensch fasziniert mich weiterhin.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Wenn deine Anziehung wie ein Navi wäre, wie läuft die Routenberechnung?", o: [{ x: "Fest eingestellt auf eine einzige, klare Zielkoordinate: Frauen.", s: { h: 2, b: 0, p: 0 } }, { x: "Zwei Hauptstraßen parallel geöffnet – ich fahre gerne auf beiden Strecken.", s: { h: 0, b: 2, p: 0 } }, { x: "Freies Offroad-Fahren. Hauptsache der Charakter stimmt.", s: { h: 0, b: 0, p: 2 } }] },
+{ t: "Welches Wort gibt dir beim Gedanken an deine Zukunft den tiefsten Frieden?", o: [{ x: "Klarheit und Tradition (Klassisches Beziehungsmodell).", s: { h: 2, b: 0, p: 0 } }, { x: "Freiheit und Flexibilität (Mich nicht festlegen zu müssen).", s: { h: 0, b: 2, p: 0 } }, { x: "Grenzenlosigkeit und Verbindung (Liebe rein auf Herzensebene).", s: { h: 0, b: 0, p: 2 } }] }
+],
+results: {
+h: { n: "Heterosexuelle Ausrichtung", d: "Deine Auswertung spiegelt eine mathematisch klare Priorisierung des komplementären Geschlechts über alle 42 Fragen hinweg wider. Deine emotionalen und physischen Trigger reagieren fast ausschließlich auf weibliche Attribute." },
+b: { n: "Bisexuelles Spektrum", d: "Die Auswertung aller 42 Fragen zeigt ein unvoreingenommenes, pluralistisches Anziehungsmuster. Du besitzt die Veranlagung, Anziehung für mehr als nur eine Geschlechtsidentität zu entwickeln und nimmst die unterschiedlichen Reize aktiv wahr." },
+p: { n: "Pansexuelle Orientierung", d: "Deine Antworten beweisen eine tiefe, charakterbasierte Anziehungskraft über alle 42 Dimensionen hinweg. Das Geschlecht oder die Identität ist für dich kein primärer Selektionsfaktor. Deine Liebe basiert rein auf Charakterstruktur, Ausstrahlung und mentaler Energie." }
+}
+};
+let currentIndex = 0;
+let scores = { h: 0, b: 0, p: 0 };
+function initQuiz() {
+document.getElementById("ui-restart").addEventListener("click", resetQuiz);
+showQuestion();
+}
+function showQuestion() {
+const pct = (currentIndex / dataset.questions.length) * 100;
+document.getElementById("ui-progress").style.width = pct + "%";
+const q = dataset.questions[currentIndex];
+document.getElementById("ui-question").innerText = "Frage " + (currentIndex + 1) + " von 42:\n" + q.t;
+const box = document.getElementById("ui-options");
+box.innerHTML = "";
+q.o.forEach(option => {
+const btn = document.createElement("button");
+btn.className = "interactive-btn";
+btn.innerText = option.x;
+btn.addEventListener("click", () => handleAnswer(option.s));
+box.appendChild(btn);
+});
+}
+function handleAnswer(optionScores) {
+scores.h += optionScores.h || 0;
+scores.b += optionScores.b || 0;
+scores.p += optionScores.p || 0;
+currentIndex++;
+if (currentIndex < dataset.questions.length) {
+showQuestion();
+} else {
+showResult();
+}
+}
+function showResult() {
+document.getElementById("ui-progress").style.width = "100%";
+setTimeout(() => {
+document.getElementById("quiz-view").classList.add("view-hidden");
+document.getElementById("result-view").classList.remove("view-hidden");
+let finalKey = "h";
+let maxScore = -1;
+if (scores.h > maxScore) { maxScore = scores.h; finalKey = "h"; }
+if (scores.b > maxScore) { maxScore = scores.b; finalKey = "b"; }
+if (scores.p > maxScore) { maxScore = scores.p; finalKey = "p"; }
+const outcome = dataset.results[finalKey];
+document.getElementById("ui-result-badge").innerText = outcome.n;
+document.getElementById("ui-result-desc").innerText = outcome.d;
+}, 200);
+}
+function resetQuiz() {
+currentIndex = 0;
+scores = { h: 0, b: 0, p: 0 };
+document.getElementById("quiz-view").classList.remove("view-hidden");
+document.getElementById("result-view").classList.add("view-hidden");
+showQuestion();
+}
+document.addEventListener("DOMContentLoaded", initQuiz);
+
+</script>
+
+</body>
+</html>
